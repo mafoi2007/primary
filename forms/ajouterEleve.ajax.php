@@ -28,8 +28,8 @@
 					name="matricule" 
 					id='matricule'  
 					maxlength ='10' 
-					readonly 
-					value="<?php echo $var;?>" />
+					 <?php /*readonly */ ?>
+					<?php /*value="<?php echo $var;?>" */?> />
 			</td>
 		</tr>
 		<tr>

@@ -19,13 +19,13 @@ $menu['cellule']['bulletin']['lien'] = array('mensuel', 'trimestriel', 'annuel')
 $menu['cellule']['eleve']['libelle'] = array('ajouter', 'rechercher');
 $menu['cellule']['eleve']['lien'] = array('ajouter', 'rechercher');
 
-$menu['cellule']['enseignant']['libelle'] = array('créer un enseignant',
+/*$menu['cellule']['enseignant']['libelle'] = array('créer un enseignant',
 													'liste des enseignants',
 													'affecter à la classe',
 													'enseignants de la classe',
 													'modifier login',
-													'modifier mot de passe');
-$menu['cellule']['enseignant']['lien'] = array('add','viewall','addprofcls','profcls','updlogin','updpwd');
+													'modifier mot de passe');*/
+/*$menu['cellule']['enseignant']['lien'] = array('add','viewall','addprofcls','profcls','updlogin','updpwd');*/
 
 $menu['cellule']['classe']['libelle'] = array('ajouter une classe',
 													'liste des classes'

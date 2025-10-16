@@ -36,7 +36,6 @@
 							name='prenomUser' 
 							size='25' 
 							maxlength='22'
-							required
 							/>
 					</td>
 				</tr>

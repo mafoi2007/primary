@@ -169,14 +169,15 @@
 
 		// On affiche tout sur une classe donnée 
 		public function getClasse($classe){
-			$sql = "SELECT *
-					FROM classe 
-					WHERE id = '$classe' ";
+			$sql = "SELECT classe.id as id, section, libelle_classe, code_classe, niveau_classe,
+							etat_classe, enseignant, libelle_section, libelle_niveau_fr, 
+							libelle_niveau_en
+					FROM classe, section, niveau
+					WHERE classe.id = '$classe' 
+						AND classe.section = section.code_section
+						AND classe.niveau_classe = niveau.code_niveau";
 			$req = $this->_db->query($sql);
 			$res = $req->fetch(PDO::FETCH_ASSOC);
-			if($res['section']=='en'){$libelleSection = 'Anglophone';}
-			elseif($res['section']=='fr'){$libelleSection = 'Francophone';}
-			$res['libelle_section'] = $libelleSection;
 			return $res;
 		}
 
@@ -1290,6 +1291,21 @@
 						AND classe = classe.id
 						AND annee_scolaire = annee_scolaire.id
 					ORDER BY nom_complet";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			return $res;
+		}
+
+
+
+		// La liste des classes 
+		public function listeClasse($etat){
+			$sql = "SELECT classe.id as id, section, libelle_classe, code_classe, niveau_classe, 
+							etat_classe, libelle_section
+					FROM classe, section 
+					WHERE section.code_section = classe.section
+					ORDER BY section, niveau_classe, libelle_classe
+					";
 			$req = $this->_db->query($sql);
 			$res = $req->fetchAll(PDO::FETCH_ASSOC);
 			return $res;
