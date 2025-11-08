@@ -17,7 +17,7 @@
 				<link rel ="shortcut icon" type="image/x-icon" href="../images/homme.png" />
 				<link type="text/javascript" src="../javascript/js.js" />
 				<script>
-					function addEleve(){
+					function sectionUpd(){
 						var xhr = getXhr()
 						// On définit ce qu'on va faire quand on aura la reponse 
 						xhr.onreadystatechange = function(){
@@ -25,22 +25,22 @@
 							if(xhr.readyState==4 && xhr.status==200){
 								leselect = xhr.responseText;
 								// On se sert de l'innerHTML pour rajouter les options à la liste
-								document.getElementById('eleve').innerHTML = leselect;
+								document.getElementById('journal').innerHTML = leselect;
 							}
 						}
 						// Ici on va voir comment faire du POST
-						xhr.open("POST", "../forms/ajouterEleve.ajax.php", true);
+						xhr.open("POST", "matiere/updpondcls.ajax.php", true);
 						// Ne pas oublier xa pour le POST 
 						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 						// Ne pas oublier de poster les arguments 
 						// C'est-à-dire l'id de la Region par exemple
-						sel = document.getElementById('clas');
-						clas = sel.options[sel.selectedIndex].value;
-						xhr.send("clas="+clas);
+						sel = document.getElementById('section');
+						section = sel.options[sel.selectedIndex].value;
+						xhr.send("section="+section);
 					}
 					
 					
-					function listEleve(){
+					function sectionRm(){
 						var xhr = getXhr()
 						// On définit ce qu'on va faire quand on aura la reponse 
 						xhr.onreadystatechange = function(){
@@ -48,22 +48,22 @@
 							if(xhr.readyState==4 && xhr.status==200){
 								leselect = xhr.responseText;
 								// On se sert de l'innerHTML pour rajouter les options à la liste
-								document.getElementById('eleve').innerHTML = leselect;
+								document.getElementById('journal').innerHTML = leselect;
 							}
 						}
 						// Ici on va voir comment faire du POST
-						xhr.open("POST", "etat/liste.ajax.php", true);
+						xhr.open("POST", "matiere/rmmatcls.ajax.php", true);
 						// Ne pas oublier xa pour le POST 
 						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 						// Ne pas oublier de poster les arguments 
 						// C'est-à-dire l'id de la Region par exemple
-						sel = document.getElementById('clas');
-						clas = sel.options[sel.selectedIndex].value;
-						xhr.send("clas="+clas);
+						sel = document.getElementById('section');
+						section = sel.options[sel.selectedIndex].value;
+						xhr.send("section="+section);
 					}
 					
 					
-					function listMatiere(){
+					function classeUpd(){
 						var xhr = getXhr()
 						// On définit ce qu'on va faire quand on aura la reponse 
 						xhr.onreadystatechange = function(){
@@ -75,19 +75,38 @@
 							}
 						}
 						// Ici on va voir comment faire du POST
-						xhr.open("POST", "etat/releve.ajax.php", true);
+						xhr.open("POST", "matiere/matiereUpd.ajax.php", true);
 						// Ne pas oublier xa pour le POST 
 						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 						// Ne pas oublier de poster les arguments 
 						// C'est-à-dire l'id de la Region par exemple
-						sel = document.getElementById('clas');
-						clas = sel.options[sel.selectedIndex].value;
-						xhr.send("clas="+clas);
+						sel = document.getElementById('classe');
+						classe = sel.options[sel.selectedIndex].value;
+						xhr.send("classe="+classe);
 					}
 					
 					
-					
-					
+					function classeRm(){
+						var xhr = getXhr()
+						// On définit ce qu'on va faire quand on aura la reponse 
+						xhr.onreadystatechange = function(){
+							// On ne fait klk choz que si on a tt rxu et ke le serveur est ok
+							if(xhr.readyState==4 && xhr.status==200){
+								leselect = xhr.responseText;
+								// On se sert de l'innerHTML pour rajouter les options à la liste
+								document.getElementById('matiere').innerHTML = leselect;
+							}
+						}
+						// Ici on va voir comment faire du POST
+						xhr.open("POST", "matiere/matiereRm.ajax.php", true);
+						// Ne pas oublier xa pour le POST 
+						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+						// Ne pas oublier de poster les arguments 
+						// C'est-à-dire l'id de la Region par exemple
+						sel = document.getElementById('classe');
+						classe = sel.options[sel.selectedIndex].value;
+						xhr.send("classe="+classe);
+					}
 				</script>
 				<title>Matière : </title>
 			</head>
@@ -103,10 +122,9 @@
 				<?php 
 					if(isset($_GET['action'])){
 						$action = urldecode($_GET['action']);
-						if($action=='addmatcls'){
-							require_once('matiere/addmatcls.php');
-						}elseif($action=='updpondcls'){
-							require_once('matiere/updpondcls.php');
+						if(!empty($action)){
+							$event = $lien.'/'.$action.'.php';
+							require_once($event);
 						}
 					}
 					require_once('../part/footer.php');

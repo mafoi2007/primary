@@ -1,8 +1,8 @@
 <div id = 'body2'>
 	<h1 class='alert'>Bulletin Mensuel</h1>
 	<form method='post' action='../traitement.php' target='_blank'>
-		<p>Classe :
-				<select name="clas" id='clas' onChange='listMoisBM()'>
+		Classe :
+				<select name="classe" id='classe' onChange='listMoisBM()'>
 					<?php
 					$classe = $config->classeMensuellePrete();
 					for($nb = 0; $nb <count($classe);$nb++){
@@ -14,9 +14,8 @@
 					}
 					?>
 					<option value='null' selected>-Choisir une Classe-</option>
-				</select></p>
-			<div id='mois'>
-				
+				</select>
+			<div id='mois' style=display:inline>
 			</div>
 			
 	</form>

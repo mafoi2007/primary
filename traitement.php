@@ -394,7 +394,7 @@
 			// On imprime le bulletin Mensuel des élèves de la classe 
 			elseif($print ==='bulletinMensuel'){
 				$print = $_POST['to_print'];
-				$classe = $_POST['clas'];
+				$classe = $_POST['classe'];
 				$mois = $_POST['mois'];
 				if($classe=='null'){
 					$_SESSION['message'] = 'Vous devez choisir une classe.';
@@ -405,7 +405,8 @@
 						header('Location:'.$source);
 					}else{
 						$bull = $config->configBulletinMensuel($classe, $mois);
-						// echo '<pre>'; print_r($bull); echo '</pre>';
+						
+						// echo '<pre>'; print_r($bull['totalNote']); echo '</pre>';
 						$_SESSION['print'] = $print;
 						$_SESSION['classe'] = $bull;
 						header('Location:print_pdf.php');
@@ -413,7 +414,13 @@
 				}
 			}
 			
-			
+			elseif($print=='vueEffectif'){
+				$vueEffectif = $config->vueEffectif();
+				$_SESSION['classe'] = $vueEffectif;
+				$_SESSION['print'] = $print;
+				// echo '<pre>';print_r($vueEffectif);
+				header('Location:print_pdf.php');
+			}
 		}
 
 
@@ -472,7 +479,7 @@
 		
 		
 		// On veut supprimer ses notes 
-		if(isset($_POST['deleteNote'])){
+		/*if(isset($_POST['deleteNote'])){
 			$reponse = $_POST['deleteNote'];
 			if($reponse==='Non'){
 				$_SESSION['message'] = 'Les notes de cette matière ne seront pas supprimées.';
@@ -483,8 +490,15 @@
 				$classe = $_POST['classe'];
 				$config->deleteNote($source, $periode, $matiere, $classe);
 			}
-		}
+		}*/
 		
+		if(isset($_POST['supprimerNote'])){
+			echo '<pre>'; print_r($_POST); echo '</pre>';
+			$classe = (int) $_POST['classe'];
+			$periode = (int) $_POST['mois'];
+			$matiere = (int) $_POST['matiere'];
+			$config->deleteNote($source, $periode, $matiere, $classe);
+		}
 		
 		
 		
@@ -495,7 +509,7 @@
 		// On lance le traitement mensuel des notes 
 		if(isset($_POST['traitementMensuel'])){
 			// echo '<pre>'; print_r($_POST); echo '</pre>';
-			$classe = $_POST['clas'];
+			$classe = $_POST['classe'];
 			$mois = $_POST['mois'];
 			if($classe=='null'){
 				$_SESSION['message'] = 'Aucune classe n a été choisie.';
@@ -559,7 +573,11 @@
 		
 		
 		
-		
+		if(isset($_POST['updatePonderation'])){
+			// echo '<pre>'; print_r($_POST); echo '</pre>';
+			$info = $_POST;
+			$config->modifierPonderation($source, $info);
+		}
 		
 		
 		

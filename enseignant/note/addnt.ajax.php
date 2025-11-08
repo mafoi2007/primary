@@ -62,7 +62,13 @@
                                     name="<?php echo $name; ?>"
                                     id = "<?php echo $name; ?>"
 									min ="0"
-									max = "<?php echo $listeSousMat[$b]['nb_point']; ?>"
+									<?php 
+									if(empty($listeSousMat[$b]['nb_point'])){
+										echo "max = '0' ";
+									}else{
+										echo "max = ".$listeSousMat[$b]['nb_point']." ";
+									}
+									?>
 									/>
                             </td> <?php 
                         } ?>

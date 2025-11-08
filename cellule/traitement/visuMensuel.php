@@ -2,7 +2,7 @@
 	<h1 class='alert'>Vérification des Notes</h1>
 	<form method='post' action=''>
 		<p>Classe :
-				<select name="clas" id='clas' onChange='listMois()'>
+				<select name="classe" id='classe' onChange='listMois()'>
 					<?php
 					$listeFr = $config->viewClasseSection('actif', 'fr');
 					$listeEn = $config->viewClasseSection('actif', 'en');
@@ -38,7 +38,7 @@
 	
 <?php 
 	if(isset($_POST['verifMois'])){
-		$classe = $_POST['clas'];
+		$classe = $_POST['classe'];
 		$mois = $_POST['mois'];
 		if($classe=='null'){
 			$_SESSION['message'] = 'Aucune classe n a été choisie';

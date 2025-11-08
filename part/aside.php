@@ -2,14 +2,15 @@
 /**********************************************************************
 *********   A S I D E   CELLULE ***************************************
 **********************************************************************/
-$menu['cellule']['etat']['libelle'] = array('liste des élèves', 'releve de notes');
-$menu['cellule']['etat']['lien'] = array('liste', 'releve');
+$menu['cellule']['etat']['libelle'] = array('liste des élèves', 'releve de notes', 'vue des effectifs');
+$menu['cellule']['etat']['lien'] = array('liste', 'releve', 'vueEffectif');
 
 $menu['cellule']['traitement']['libelle'] = array('verification des notes',
+													'supprimer des notes',
 													'traitement mensuel', 
 													'traitement trimestriel',
 													'traitement annuel');
-$menu['cellule']['traitement']['lien'] = array('visuMensuel','mensuel', 'trimestriel', 'annuel');
+$menu['cellule']['traitement']['lien'] = array('visuMensuel','delNote', 'mensuel', 'trimestriel', 'annuel');
 
 $menu['cellule']['bulletin']['libelle'] = array('bulletin mensuel', 
 													'bulletin trimestriel',
@@ -50,8 +51,9 @@ $menu['administrateur']['utilisateur']['lien'] = array('add', 'viewall', 'addpro
 														'profcls');
 
 $menu['administrateur']['matiere']['libelle'] = array('Ajouter une matière',
+													   'Retirer une matière',
 													'modifier ponderation');
-$menu['administrateur']['matiere']['lien'] = array('addmatcls','updpondcls');
+$menu['administrateur']['matiere']['lien'] = array('addmatcls','rmmatcls', 'updpondcls');
 
 $menu['administrateur']['journal']['libelle'] = array('Mon Journal', 'Journal des Enseignants');
 $menu['administrateur']['journal']['lien'] = array('myjr','otjr');
@@ -66,9 +68,8 @@ $menu['administrateur']['bd']['lien'] = array('as','appr','cls','per','usert');
 
 $menu['enseignant']['note']['libelle'] = array('Insérer des Notes', 
 												'Modifier des Notes',
-												'Supprimer les notes',
 												'Consulter ses notes');
-$menu['enseignant']['note']['lien'] = array('addnt','updnt','delnt','viewnt');
+$menu['enseignant']['note']['lien'] = array('addnt','updnt','viewnt');
 
 
 $menu['enseignant']['stat']['libelle'] = array('Statistiques Mensuelles', 

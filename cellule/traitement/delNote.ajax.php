@@ -22,7 +22,7 @@
 						echo "'> Mois ".$moisSaisi[$i]['periode']."</option>";
 					} ?>
 				</select>
-				<input type='submit' name='verifMois' value='Vérifier' />
+				<input type='submit' name='verifMois' value='Check' />
 <?php 				
 				
 			}

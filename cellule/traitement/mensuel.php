@@ -1,8 +1,8 @@
 <div id = 'body2'>
 	<h1 class='alert'>Traitement mensuel des Notes</h1>
 	<form method='post' action='../traitement.php' target='_blank'>
-		<p>Classe :
-				<select name="clas" id='clas' onChange='listMoisTM()'>
+		Classe :
+				<select name="classe" id='classe' onChange='listMoisTM()'>
 					<?php
 					$listeFr = $config->viewClasseSection('actif', 'fr');
 					$listeEn = $config->viewClasseSection('actif', 'en');
@@ -26,8 +26,8 @@
 					
 					?>
 					<option value='null' selected>-Choisir une Classe-</option>
-				</select></p>
-			<div id='mois'>
+				</select>
+			<div id='mois' style=display:inline>
 				
 			</div>
 			
@@ -38,7 +38,7 @@
 	
 <?php 
 	if(isset($_POST['verifMois'])){
-		$classe = $_POST['clas'];
+		$classe = $_POST['classe'];
 		$mois = $_POST['mois'];
 		if($classe=='null'){
 			$_SESSION['message'] = 'Aucune classe n a été choisie';

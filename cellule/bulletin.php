@@ -34,9 +34,9 @@
 						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 						// Ne pas oublier de poster les arguments 
 						// C'est-à-dire l'id de la Region par exemple
-						sel = document.getElementById('clas');
-						clas = sel.options[sel.selectedIndex].value;
-						xhr.send("clas="+clas);
+						sel = document.getElementById('classe');
+						classe = sel.options[sel.selectedIndex].value;
+						xhr.send("classe="+classe);
 					}
 				</script>
 				<title>Bulletins : </title>
@@ -53,14 +53,9 @@
 				<?php 
 					if(isset($_GET['action'])){
 						$action = urldecode($_GET['action']);
-						if($action=='mensuel'){
-							require_once('bulletin/mensuel.php');
-						}elseif($action=='trimestriel'){
-							require_once('bulletin/trimestriel.php');
-						}elseif($action=='annuel'){
-							require_once('bulletin/annuel.php');
-						}else{
-							echo "<h3 class='alert'>Action Illégale.</h3>";
+						if(!empty($action)){
+							$event = $lien.'/'.$action.'.php';
+							require_once($event);
 						}
 					}
 					require_once('../part/footer.php');

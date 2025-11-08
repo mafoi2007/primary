@@ -103,10 +103,9 @@
 				<?php 
 					if(isset($_GET['action'])){
 						$action = urldecode($_GET['action']);
-						if($action=='liste'){
-							require_once('etat/liste.php');
-						}elseif($action=='releve'){
-							require_once('etat/releve.php');
+						if(!empty($action)){
+							$event = $lien.'/'.$action.'.php';
+							require_once($event);
 						}
 					}
 					require_once('../part/footer.php');

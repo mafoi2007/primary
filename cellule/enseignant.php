@@ -102,6 +102,13 @@
 				<?php 
 					if(isset($_GET['action'])){
 						$action = urldecode($_GET['action']);
+						if(!empty($action)){
+							$event = $lien.'/'.$action.'.php';
+							require_once($event);
+						}
+					}
+					/*if(isset($_GET['action'])){
+						$action = urldecode($_GET['action']);
 						if($action=='ajouter'){
 							require_once('eleve/ajouter.php');
 						}elseif($action=='liste'){
@@ -120,7 +127,7 @@
 							echo "<h3 class='alert'>L'application ne prend pas";
 							echo " en charge ce choix : <i>".$action."</i></h3>";
 						}
-					}
+					}*/
 					require_once('../part/footer.php');
 				?>
 			</body>

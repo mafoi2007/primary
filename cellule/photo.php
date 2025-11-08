@@ -102,12 +102,9 @@
 				<?php 
 					if(isset($_GET['action'])){
 						$action = urldecode($_GET['action']);
-						if($action=='addph'){
-							require_once('photo/addph.php');
-						}elseif($action=='delph'){
-							require_once('photo/delph.php');
-						}elseif($action=='updph'){
-							require_once('photo/updph.php');
+						if(!empty($action)){
+							$event = $lien.'/'.$action.'.php';
+							require_once($event);
 						}
 					}
 					require_once('../part/footer.php');

@@ -106,25 +106,6 @@
 							$event = $lien.'/'.$action.'.php';
 							require_once($event);
 						}
-						/*if($action=='addcls'){
-							require_once('classe/addcls.php');
-						}elseif($action=='lscls'){
-							require_once('classe/lscls.php');
-						}elseif($action=='rechercher'){
-							require_once('eleve/find.php');
-						}elseif($action=='upd'){
-							require_once('eleve/upd.php');
-						}elseif($action=='delete'){
-							require_once('eleve/delete.php');
-						}elseif($action=='restaure'){
-							require_once('eleve/restaure.php');
-						}elseif($action=='view'){
-							require_once('eleve/view.php');
-						}else{
-							echo "<h3 class='alert'>L'application ne prend pas";
-							echo " en charge ce choix : <i>".$action."</i></h3>";
-							
-						}*/
 					}
 					require_once('../part/footer.php');
 				?>
