@@ -1,8 +1,8 @@
 <?php 
 	session_start();
 	require_once('inc/pdfL.class.php');
-	
 	$pdf = new pdf('L', 'mm', 'A4');
+	$pdf->SetFillColor(200, 205, 180);
 	
 	
 	
@@ -12,7 +12,7 @@
 	if(isset($_SESSION['print'])){
 		if($_SESSION['print']=='releveEleve'){
 			$classe = $_SESSION['releve'];
-			$pdf->SetFillColor(155, 150, 149);
+			
 			// La page doit s'afficher en fonction de la section 
 			if($classe['section']=='en'){
 				$pdf->addPage();
@@ -138,6 +138,135 @@
 			
 			
 		}
+
+
+
+		elseif($_SESSION['print']=='statistiqueMensuelle'){
+			$pdf->addPage();
+			$pdf->Entete();
+			$information = $_SESSION['info'];
+			$section = $information['section'];
+			$titre['fr'] = 'Statistiques Mensuelles du Mois '.$information['mois'];
+			$titre['en'] = 'Monthly statistic of Month '.$information['mois'];
+			$classeTitle['fr'] = 'Classe';
+			$classeTitle['en'] = 'Class';
+			$enseignantTitle['fr'] = 'Enseignant';
+			$enseignantTitle['en'] = 'Teacher';
+			$effectifTitle['fr'] = 'Effectif';
+			$effectifTitle['en'] = 'Roll';
+			$evalueTitle['fr'] = 'Evalués';
+			$evalueTitle['en'] = 'Evaluated';
+			$moyenneTitle['fr'] = 'Nb Moyenne';
+			$moyenneTitle['en'] = 'Nb of Aver.';
+			$sousMoyenneTitle['fr'] = 'Nb Sous Moy.';
+			$sousMoyenneTitle['en'] = 'Nb of Sub Aver.';
+			$tauxTitle['fr'] = 'Pourcentage';
+			$tauxTitle['en'] = 'Percentage';
+			$masculinTitle['fr'] = 'M';
+			$masculinTitle['en'] = 'M';
+			$femininTitle['fr'] = 'F';
+			$femininTitle['en'] = 'F';
+			$totalTitle['fr'] = 'T';
+			$totalTitle['en'] = 'T';
+
+			$pdf->Titre($titre[$section]);
+			$pdf->SetFont('Times','B',14);
+			$pdf->Ln(6);
+			$pdf->Cell(10, 12, utf8_decode('N°'), 1, 0, 'C', true);
+			$pdf->Cell(35, 12, utf8_decode($classeTitle[$section]), 1, 0, 'C', true);
+			$pdf->Cell(45, 6, utf8_decode($effectifTitle[$section]), 1, 0, 'C', true);
+			$pdf->Cell(45, 6, utf8_decode($evalueTitle[$section]), 1, 0, 'C', true);
+			$pdf->Cell(45, 6, utf8_decode($moyenneTitle[$section]), 1, 0, 'C', true);
+			$pdf->Cell(45, 6, utf8_decode($sousMoyenneTitle[$section]), 1, 0, 'C', true);
+			$pdf->Cell(45, 6, utf8_decode($tauxTitle[$section]), 1, 0, 'C', true);
+			$pdf->Ln(6);
+			$pdf->Cell(45);
+			for($a=0;$a<5;$a++){
+				$pdf->Cell(15, 6, utf8_decode($femininTitle[$section]), 1, 0, 'C',true);
+				$pdf->Cell(15, 6, utf8_decode($masculinTitle[$section]), 1, 0, 'C', true);
+				$pdf->Cell(15, 6, utf8_decode($totalTitle[$section]), 1, 0, 'C',true);
+			}
+			$pdf->Ln(6);
+			$pdf->SetFont('Times','',14);
+			$a = 1;
+			for($i=0;$i<count($information['classe']);$i++){
+				$classe = $information['classe'];
+				$idClasse = $classe[$i]['classe'];
+				$effectif = $information['effectif'][$idClasse];
+				$evalue = $information['evalues'][$idClasse];
+				$moyennes = $information['moyennes'][$idClasse];
+				$sousMoyenneFille = $evalue['feminin'] - $moyennes['feminin'];
+				$sousMoyenneGarcon = $evalue['masculin'] - $moyennes['masculin'];
+				$sousMoyenneTotal = $sousMoyenneFille + $sousMoyenneGarcon;
+				if($evalue['masculin']!=0){
+					$tauxMasc = $moyennes['masculin'] * 100 / $evalue['masculin'];
+				}else{$tauxMasc ='';}
+				if($evalue['feminin']!=0){
+					$tauxFem =  $moyennes['feminin'] * 100 / $evalue['feminin'];
+				}else{
+					$tauxFem = '';
+				}
+				if($evalue['total']!=0){
+					$tauxTot =  $moyennes['total'] * 100 / $evalue['total'];
+				}else{
+					$tauxTot = '';
+				}
+				$pdf->Cell(10, 6, utf8_decode($a), 1, 0, 'C');
+				$pdf->Cell(35, 6, strtoupper(utf8_decode($classe[$i]['libelle_classe'])), 1, 0, 'L');
+				$pdf->Cell(15, 6, utf8_decode($effectif['F']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($effectif['G']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($effectif['T']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($evalue['feminin']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($evalue['masculin']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($evalue['total']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($moyennes['feminin']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($moyennes['masculin']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($moyennes['total']), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($sousMoyenneFille), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($sousMoyenneGarcon), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode($sousMoyenneTotal), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode(substr($tauxFem,0,5)), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode(substr($tauxMasc,0,5)), 1, 0, 'C');
+				$pdf->Cell(15, 6, utf8_decode(substr($tauxTot,0,5)), 1, 0, 'C');
+				$pdf->Ln(6);
+				$effFille[] = $effectif['F'];
+				$effMasculin[] = $effectif['G'];
+				$effTotal[] = $effectif['T'];
+				$evalF[] = $evalue['feminin'];
+				$evalM[] = $evalue['masculin'];
+				$evalT[] = $evalue['total'];
+				$moyM[] = $moyennes['masculin'];
+				$moyF[] = $moyennes['feminin'];
+				$moyT[] = $moyennes['total'];
+				$sMoyF[]= $sousMoyenneFille;
+				$sMoyM[]= $sousMoyenneGarcon;
+				$sMoyT[] = $sousMoyenneTotal;
+				$a++;
+			}
+			$pdf->SetFont('Times','B',14);
+			$tauxM =  array_sum($moyM) * 100 / array_sum($evalM);
+			$tauxF = array_sum($moyF) * 100 / array_sum($evalF);
+			$tauxT = array_sum($moyT) * 100 / array_sum($evalT);
+			$pdf->Cell(45, 6, strtoupper(utf8_decode('Total')), 1, 0, 'C', true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($effFille)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($effMasculin)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($effTotal)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($evalF)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($evalM)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($evalT)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($moyF)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($moyM)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($moyT)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($sMoyF)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($sMoyM)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(array_sum($sMoyT)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(substr($tauxF,0,5)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(substr($tauxM,0,5)), 1, 0, 'C',true);
+			$pdf->Cell(15, 6, utf8_decode(substr($tauxT,0,5)), 1, 0, 'C',true);
+
+			$fileName='Statistiques_'.$section.'_mois_'.$information['mois'].'.pdf';
+			$pdf->Output($fileName, 'I');
+		}
 		
 		
 	}
@@ -161,4 +290,5 @@
 	unset($_SESSION['print']);
 	unset($_SESSION['classe']);
 	unset($_SESSION['releve']);
+	unset($_SESSION['info']);
 	

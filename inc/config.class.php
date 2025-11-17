@@ -12,6 +12,8 @@
 		
 		const TOTAL_POINT_CLASSE = 320;
 
+		
+
 		/*******************************************************
 		 * **********************************************************
 		 *  							LES SETTERS 
@@ -238,6 +240,19 @@
 		
 		public function getMoisAll(){
 			$sql = "SELECT * FROM periode ORDER BY libelle_periode";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			return $res;
+		}
+
+
+		/**
+		 * On récupère les mois dont les notes ont été traitées
+		 */
+		public function getMoisTraites(){
+			$sql = "SELECT DISTINCT mois 
+					FROM bull_mensuel
+					ORDER BY mois DESC";
 			$req = $this->_db->query($sql);
 			$res = $req->fetchAll(PDO::FETCH_ASSOC);
 			return $res;
@@ -525,6 +540,18 @@
 			$req = $this->_db->query($sql);
 			$res = $req->fetch(PDO::FETCH_ASSOC);
 			return $res;
+		}
+
+
+
+
+
+
+		private function checkTable($table){
+			$sql = $this->_db->prepare("SHOW TABLES LIKE :table");
+			$sql->bindValue(':table', $table);
+			$sql->execute();
+			return $sql->fetch();
 		}
 		
 		
@@ -2105,6 +2132,61 @@
 			// $configuration['listeSousMatiere'] = $listeSousMatiereClasse;
 			return $configuration;
 		}
+
+
+		private function classeTraiteesMois($mois, $section){
+			$sql = "SELECT classe, libelle_classe, section, enseignant, enseignant.nom as nom_enseignant
+					FROM bull_mensuel, classe, enseignant
+					WHERE mois = '$mois' 
+						AND classe.id = classe
+						AND classe.section = '$section'
+						AND enseignant.id = classe.enseignant
+					ORDER BY section, niveau_classe, libelle_classe";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			return $res;
+		}
+
+
+
+		public function configStatMensuelle($mois){
+			$this->_mois = $this->setUserId($mois['mois']);
+			$this->_section = $this->setSection($mois['section']);
+			// On commence par lister toutes les classes dont les bull mensuels ont été gérés
+			$classes = $this->classeTraiteesMois($this->_mois, $this->_section);
+			// echo '<pre>'; print_r($classes); echo '</pre>';
+			
+			for($i=0;$i<count($classes);$i++){
+				$idClasse = $classes[$i]['classe'];
+				$effectifClasse[$idClasse] = $this->listeEleveStat($idClasse, 'actif', '');
+				$table = 'mensuel_'.$this->_mois.'_'.$idClasse;
+				$exist = $this->checkTable($table);
+				if($exist==NULL){
+					$_SESSION['message'] = 'Certaines classes ne sont pas traitées.';
+					header('Location:'.$_SERVER['HTTP_REFERER']);
+					exit;
+				}else{
+					$nbEvalue = $this->nbEvalues($table);
+					$resultat[$idClasse] = $nbEvalue;
+					$nbMoyenne = $this->nbMoyennes($table);
+					$resMoyenne[$idClasse] = $nbMoyenne;
+					/*$sql = "SELECT * 
+							FROM $table, eleve
+							WHERE eleve = eleve.id";
+					$req = $this->_db->query($sql);
+					$res = $req->fetch(PDO::FETCH_ASSOC);
+					$resultat[$idClasse] = $res;*/
+				}
+			}
+			// echo '<pre>'; print_r($effectifClasse); echo '</pre>';
+			$information['mois'] = $this->_mois;
+			$information['section'] = $this->_section;
+			$information['classe'] = $classes;
+			$information['effectif'] = $effectifClasse;
+			$information['evalues'] = $resultat;
+			$information['moyennes'] = $resMoyenne;
+			return $information;
+		}
 		
 		
 		
@@ -2372,6 +2454,55 @@
 			$req = $this->_db->query($sql);
 			$res = $req->fetchAll(PDO::FETCH_ASSOC);
 			return $res;
+		}
+
+
+		private function nbEvalues($table){
+			$sqlMasc = "SELECT count(sexe) as masculin
+					FROM $table, eleve
+					WHERE eleve = eleve.id
+						AND sexe='M'
+						AND moyenne>0";
+			$reqMasc = $this->_db->query($sqlMasc);
+			$resMasc = $reqMasc->fetch(PDO::FETCH_ASSOC);
+			$resultat['masculin'] = $resMasc['masculin'];
+
+			$sqlFem = "SELECT count(sexe) as feminin
+					FROM $table, eleve
+					WHERE eleve = eleve.id
+						AND sexe='F'
+						AND moyenne>0";
+			$reqFem = $this->_db->query($sqlFem);
+			$resFem = $reqFem->fetch(PDO::FETCH_ASSOC);
+			$resultat['feminin'] = $resFem['feminin'];
+			$resultat['total'] = $resultat['masculin'] + $resultat['feminin'];
+			return $resultat;
+		}
+
+
+
+
+
+		private function nbMoyennes($table){
+			$sqlMasc = "SELECT count(sexe) as masculin
+					FROM $table, eleve
+					WHERE eleve = eleve.id
+						AND sexe='M'
+						AND moyenne>=10";
+			$reqMasc = $this->_db->query($sqlMasc);
+			$resMasc = $reqMasc->fetch(PDO::FETCH_ASSOC);
+			$resultat['masculin'] = $resMasc['masculin'];
+
+			$sqlFem = "SELECT count(sexe) as feminin
+					FROM $table, eleve
+					WHERE eleve = eleve.id
+						AND sexe='F'
+						AND moyenne>=10";
+			$reqFem = $this->_db->query($sqlFem);
+			$resFem = $reqFem->fetch(PDO::FETCH_ASSOC);
+			$resultat['feminin'] = $resFem['feminin'];
+			$resultat['total'] = $resultat['masculin'] + $resultat['feminin'];
+			return $resultat;
 		}
 		
 		

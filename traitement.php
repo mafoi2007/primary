@@ -414,12 +414,26 @@
 				}
 			}
 			
+			// La vue d'ensemble des effectifs 
 			elseif($print=='vueEffectif'){
 				$vueEffectif = $config->vueEffectif();
 				$_SESSION['classe'] = $vueEffectif;
 				$_SESSION['print'] = $print;
 				// echo '<pre>';print_r($vueEffectif);
 				header('Location:print_pdf.php');
+			}
+
+
+			// Les statistiques Mensuelles 
+			elseif($print=='statistiqueMensuelle'){
+				$data['mois'] = $_POST['mois'];
+				$data['section'] = $_POST['section'];
+				$information = $config->configStatMensuelle($data);
+				// echo '<pre>'; print_r($information); echo '</pre>';
+				$_SESSION['print'] = $print;
+				$_SESSION['info'] = $information;
+				// echo '<pre>'; print_r($_SESSION['info']);
+				header('Location:print_pdf_landscape.php');
 			}
 		}
 

@@ -17,6 +17,11 @@ $menu['cellule']['bulletin']['libelle'] = array('bulletin mensuel',
 													'bulletin annuel');
 $menu['cellule']['bulletin']['lien'] = array('mensuel', 'trimestriel', 'annuel');
 
+$menu['cellule']['stat']['libelle'] = array('statistiques mensuelles', 
+											'statistiques trimestrielles',
+											'statistiques annuelles');
+$menu['cellule']['stat']['lien'] = array('mensuel', 'trimestre', 'annuel');
+
 $menu['cellule']['eleve']['libelle'] = array('ajouter', 'rechercher');
 $menu['cellule']['eleve']['lien'] = array('ajouter', 'rechercher');
 

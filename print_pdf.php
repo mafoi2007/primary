@@ -248,7 +248,7 @@
 		
 		
 		
-		if($_SESSION['print']=='bulletinMensuel'){
+		elseif($_SESSION['print']=='bulletinMensuel'){
 			$classe = $_SESSION['classe'];
 			$pdf->SetFillColor(155, 150, 149);
 			// La section Anglophone 
