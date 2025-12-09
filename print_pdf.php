@@ -3,6 +3,7 @@
 	require_once('inc/pdf.class.php');
 	
 	$pdf = new pdf('P', 'mm', 'A4');
+	$pdf->SetFillColor(155, 150, 149);
 	
 	
 	
@@ -12,7 +13,6 @@
 	if(isset($_SESSION['print'])){
 		if($_SESSION['print']=='listeEleve'){
 			$classe = $_SESSION['classe'];
-			$pdf->SetFillColor(155, 150, 149);
 			// La page doit s'afficher en fonction de la section 
 			if($classe['section']=='en'){
 				$pdf->addPage();
@@ -169,7 +169,7 @@
 		
 		elseif($_SESSION['print']=='ficheEleve'){
 			$eleve = $_SESSION['eleve'];
-			$pdf->SetFillColor(155, 150, 149);
+			
 			$pdf->addPage();
 			$titre = "Fiche d'identification de l'eleve ";
 			$pdf->Titre($titre);
@@ -250,7 +250,7 @@
 		
 		elseif($_SESSION['print']=='bulletinMensuel'){
 			$classe = $_SESSION['classe'];
-			$pdf->SetFillColor(155, 150, 149);
+			
 			// La section Anglophone 
 			if($classe['section']=='en'){
 				// Un bulletin par élève
@@ -484,11 +484,13 @@
 					$pdf->Cell(13, 5, $totalAppr, 1, 0, 'C', true);
 					$pdf->Ln(15);
 					$moyenne = $classe['totalNote'][$i]['moyenne'];
-					if($classe['totalNote'][$i]['rank']==1){
-						$rank = $classe['totalNote'][$i]['rank'].'er';
-					}elseif($classe['totalNote'][$i]['rank']!=1){
-						$rank = $classe['totalNote'][$i]['rank'].'eme';
-					}
+					if($classe['totalNote'][$i]['rank']!=NULL){
+						if($classe['totalNote'][$i]['rank']==1){
+							$rank = $classe['totalNote'][$i]['rank'].'er';
+						}elseif($classe['totalNote'][$i]['rank']!=1){
+							$rank = $classe['totalNote'][$i]['rank'].'eme';
+						}
+					}else{$rank = NULL;}
 					$moyenneEleve = substr($moyenne,0,5).' / 20';
 					$rang = $rank.' / '.$classe['totalNote'][$i]['evalues'];
 					$moyenneGenerale = $classe['totalNote'][$i]['moy_gen'];
@@ -530,10 +532,115 @@
 			
 			
 		}
+
+
+
+
+		elseif($_SESSION['print']=='bulletinTrimestre'){
+			$classe = $_SESSION['classe'];
+			if($classe['section']=='fr'){
+				
+				// Un bulletin par élève
+				$eleve = $classe['eleve'];
+				$infoClasse = $classe['infoClasse'];
+				$trimestre = $classe['moisCourant'];
+				for($i=0;$i<count($eleve);$i++){
+					
+					
+					// GESTION DES MATIERES 
+					$listeMatiere = $classe['listeMatiere'];
+					for($b=0;$b<count($listeMatiere);$b++){
+						/*$ponderationMatiere = $classe['ponderationMatiere'];
+						$pdf->SetFont('Times','',8);
+						$cleCompetence = 'libelle_competence_'.$classe['section'];
+						$codeMatiere = $listeMatiere[$b]['code_competence'];
+						$idMatiere = $listeMatiere[$b]['id_competence'];
+						$libelleMatiere = strtoupper($listeMatiere[$b][$cleCompetence]);
+						$pdf->Cell(75, 5, substr($libelleMatiere,0,46), 1, 0, 'L');
+						$pdf->Cell(10, 5, $ponderationMatiere[$idEleve][$idMatiere], 1, 0, 'C');
+						$nbSousMatiereAll = count($classe['listeSousMatiereAll']);
+						$noteEleve = $classe['note'][$idEleve][$idMatiere];
+						$nbSousMatiere = count($noteEleve);
+						$a = 1;*/
+						/*for($c=0;$c<$nbSousMatiere;$c++){
+							// $noteObtenue = $noteEleve[$c]['note'];
+							// $pdf->Cell(17, 5, $noteObtenue, 1, 0, 'C');							
+							$pdf->Cell(17, 5, $noteEleve[$c]['note'], 1, 0, 'C');							
+						}*/
+
+						/*if($classe['totalNote'][$i]['eleve']==$eleve[$i]['id']){
+							$cleCote = $codeMatiere.'_cote';
+							$cleAppr = $codeMatiere.'_appr';
+							$totalNoteMatiere = $classe['totalNote'][$i][$codeMatiere];
+							$totalCote = $classe['totalNote'][$i][$cleCote];
+							$totalAppr = $classe['totalNote'][$i][$cleAppr];
+							
+						}*/
+						/*$pdf->setFont('Times', 'B', 8);
+						$pdf->Cell(13, 5, strtoupper($totalNoteMatiere), 1, 0, 'C', true);
+						$pdf->Cell(13, 5, $totalCote, 1, 0, 'C', true);
+						$pdf->Cell(13, 5, $totalAppr, 1, 0, 'C', true);
+						$pdf->Ln(5);
+						$pdf->setFont('Times', '', 9);*/
+					}
+					/*$pdf->SetFont('Times', 'B', 11);
+					$totalNote = $classe['totalNote'][$i]['total'];
+					$totalCote = $classe['totalNote'][$i]['cote'];
+					$totalAppr = $classe['totalNote'][$i]['appr'];
+					$pdf->Cell(153, 5, 'TOTAL / '.$classe['ponderation'], 1, 0, 'C', true);
+					$pdf->Cell(13, 5, $totalNote, 1, 0, 'C', true);
+					$pdf->Cell(13, 5, $totalCote, 1, 0, 'C', true);
+					$pdf->Cell(13, 5, $totalAppr, 1, 0, 'C', true);
+					$pdf->Ln(15);*/
+					/*$moyenne = $classe['totalNote'][$i]['moyenne'];*/
+					/*if($classe['totalNote'][$i]['rank']!=NULL){*/
+						/*if($classe['totalNote'][$i]['rank']==1){
+							$rank = $classe['totalNote'][$i]['rank'].'er';
+						}elseif($classe['totalNote'][$i]['rank']!=1){
+							$rank = $classe['totalNote'][$i]['rank'].'eme';
+						}*/
+					/*}else{$rank = NULL;}*/
+					/*$moyenneEleve = substr($moyenne,0,5).' / 20';
+					$rang = $rank.' / '.$classe['totalNote'][$i]['evalues'];
+					$moyenneGenerale = $classe['totalNote'][$i]['moy_gen'];
+					$evalues = $classe['totalNote'][$i]['evalues'];
+					$pdf->Cell(47, 5, 'Moy. Generale : '.$moyenneGenerale, 1, 0, 'C');
+					$pdf->Cell(48, 5, utf8_decode('Effectif Evalué : ').$evalues, 1, 0, 'C');
+					$pdf->Cell(50, 5, 'Moyenne : '.$moyenneEleve, 1, 0, 'C', true);
+					$pdf->Cell(50, 5, 'Rang : '.$rang, 1, 0, 'C', true);
+					$pdf->SetFont('Times','BI',9);
+					$pdf->Ln(5);
+					$pdf->Cell(195, 5, strtoupper('Observations Generales et Remarques'), 1, 1, 'C', true);
+					$pdf->Cell(65, 5, strtoupper('Observation Mensuelle'), 1, 0, 'C');
+					$pdf->Cell(45, 5, strtoupper('signature enseignant'), 1, 0, 'C');
+					$pdf->Cell(50, 5, strtoupper('signature administration'), 1, 0, 'C');
+					$pdf->Cell(35, 5, strtoupper('signature parent'), 1, 0, 'C');
+					$pdf->Ln(5);
+					$pdf->Cell(65, 20, '', 1, 0, 'C');
+					$pdf->Cell(45, 20, '', 1, 0, 'C');
+					$pdf->Cell(50, 20, '', 1, 0, 'C');
+					$pdf->Cell(35, 20, '', 1, 0, 'C');
+					$pdf->Ln(25);
+					$faitA = 'Fait a '.ucwords($_SESSION['information']['ville']).' le '.DATE('d / m / Y');
+					$pdf->Cell(180, 5, $faitA, 0,0,'R');
+					$pdf->Ln(3);
+					$pdf->Cell(180, 5, 'La Directrice ', 0,0,'R');*/
+				}
+				
+				/*$fileName='Bulletin_mensuel_';
+				$fileName .= str_replace(' ', '_', $infoClasse['libelle_classe']);
+				$fileName .= '_'.str_replace(' ', '_',$mois['code_periode_fr']);
+				$fileName.= '.pdf';
+				$pdf->Output($fileName, 'I');*/
+			
+			}
+			$pdf->bulletinTrimestre($classe);
+			$fileName = 'bulletin.pdf';
+			$pdf->Output($fileName, 'I');
+		}
 		
 		if($_SESSION['print']=='vueEffectif'){
 			$classe = $_SESSION['classe'];
-			$pdf->SetFillColor(155, 150, 149);
 			$pdf->addPage();
 			$pdf->Entete();
 			$titre = "Vue d'ensemble des effectifs";

@@ -17,6 +17,7 @@
 			<h3 class='bien'>Matière : <?php echo strtoupper($nomMatiere); ?></h3>
 			<table border='1' width='80%'>
 				<tr>
+					<th>N°</th>
 					<th>Nom de l'élève</th>
 					<?php 
 						for($i=0;$i<count($listeSousMatiere);$i++){
@@ -37,10 +38,12 @@
 				$listeEleve = $config->listeEleve($_SESSION['user']['classeTenue']['id'],
                                                         'non_supprime',
                                                         $_SESSION['information']['id']);
+				$x = 1;
 				for($a=0;$a<count($listeEleve);$a++){
 					$nomEleve = $listeEleve[$a]['nom_complet'];
 					$idEleve = $listeEleve[$a]['id'];
 					echo "<tr>";
+						echo "<td>".$x."</td>";
 						echo "<td>";
 							echo "<input"; 
 								echo " type='hidden'"; 
@@ -54,7 +57,7 @@
 							$totalNote[$a][] = $noteEleve['note'];
 							echo "<td align='center'>";
 								echo "<input ";
-									echo "type='number'";
+									echo "type='number' size='5' ";
 									echo "step = '0.01'";
 										echo " max='".$listeSousMatiere[$b]['nb_point']."'";
 									echo "name='note[".$a."][]' ";
@@ -70,6 +73,7 @@
 									disabled />";
 						echo "</td>";
 					echo "</tr>";
+					$x++;
 				}
 				echo "<tr>";
 					echo "<td colspan='6' align='center'>";

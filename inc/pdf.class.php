@@ -132,6 +132,174 @@
 			$this->Ln(5);
 		}
 		
+
+
+
+		public function bulletinTrimestre($classe){
+			$eleve = $classe['eleve'];
+			$infoClasse = $classe['infoClasse'];
+			$trimestre = $classe['moisCourant'];
+			$section = $classe['section'];
+			for($i=0;$i<count($eleve);$i++){
+				$this->addPage();
+				$this->Entete();
+				$idEleve = $eleve[$i]['id'];
+				$photo = $eleve[$i]['photo'];
+				if($photo=='images/student/' or $photo==''){
+					$image = 'images/student/no_name.png';
+				}else{
+					$image = $photo;
+				}
+				// ENTÊTE DU BULLETIN 
+				$libNiveau['fr'] = 'Niveau : ';
+				$libClasse['fr'] = 'Classe : ';
+				$libTrimestre['fr'] = 'Trimestre : ';
+				$libEleve['fr'] = 'Eleve : ';
+				$libEnseignant['fr'] = 'Enseignant(e) : ';
+				$libMatiere['fr'] = 'Matiere';
+				$libPoint['fr'] = 'pts';
+				$libMensu['fr'] = 'Mois ';
+				$libNiveau['en'] = 'Level : ';
+				$libClasse['en'] = 'Class : ';
+				$libTrimestre['en'] = 'Term : ';
+				$libEleve['en'] = 'Student : ';
+				$libEnseignant['en'] = 'Teacher : ';
+				$libMatiere['en'] = 'Subject';
+				$libPoint['en'] = 'mks';
+				$libMensu['en'] = 'Month ';
+				$libTotal['fr'] = 'Total';
+				$libCote['fr'] = 'Cote';
+				$libAppr['fr'] = 'Appr';
+				$libTotal['en'] = 'Total';
+				$libCote['en'] = 'Grade';
+				$libAppr['en'] = 'Appr';
+
+
+
+				$this->SetFont('Times','',13);
+				$this->Image($image, 180, 65, 15);
+				$this->Text(20,75,$libNiveau[$section]);
+				$this->Text(60,75,$libClasse[$section]);
+				$this->Text(100,75,$libTrimestre[$section]);
+				$this->Text(20,80,$libEleve[$section]);
+				$this->Text(20,85,$libEnseignant[$section]);
+				$this->SetFont('Times','B',13);
+				$this->Text(39,75,$infoClasse['niveau_classe']);
+				$this->Text(77,75,$this->convert(strtoupper($infoClasse['libelle_classe'])));
+				$this->Text(125,75, $this->convert(strtoupper($trimestre)));
+				$this->Text(50,80,stripslashes($eleve[$i]['nom_complet']));
+				$this->SetFont('Times','BI',12);
+				$this->Text(50,85, $classe['enseignant']['nom']);
+				$this->Ln(30);
+
+
+				// Entête du Tableau 
+				$this->setFont('Times', 'B', 8);
+				$this->Cell(75, 5, strtoupper($this->convert($libMatiere[$section])), 1, 0, 'C', true);
+				$this->Cell(10, 5, strtoupper($libPoint[$section]), 1, 0, 'C', true);
+				for($a=1;$a<=$classe['nbMois']; $a++){
+					$this->setFont('Times', 'B', 6);
+					$mensualite = $libMensu[$section];
+					$this->Cell(15, 5, $this->convert($mensualite.' '.$a), 1, 0, 'C', true);
+				}
+				$this->Cell(16, 5, strtoupper($libTotal[$section]), 1, 0, 'C', true);
+				$this->Cell(16, 5, strtoupper($libCote[$section]), 1, 0, 'C', true);
+				$this->Cell(16, 5, strtoupper($libAppr[$section]), 1, 0, 'C', true);
+				$this->Ln(5);
+
+
+				// Gestion des Matières 
+				$listeMatiere = $classe['listeMatiere'];
+				for($b=0;$b<count($listeMatiere);$b++){
+					$ponderationMatiere = $classe['ponderationMatiere'];
+					$this->SetFont('Times','',8);
+					$cleCompetence = 'libelle_competence_'.$classe['section'];
+					$codeMatiere = $listeMatiere[$b]['code_competence'];
+					$idMatiere = $listeMatiere[$b]['id_competence'];
+					$libelleMatiere = strtoupper($listeMatiere[$b][$cleCompetence]);
+					$this->Cell(75, 5, substr($libelleMatiere,0,46), 1, 0, 'L');
+					$this->Cell(10, 5, $ponderationMatiere[$idEleve][$idMatiere], 1, 0, 'C');
+					$idEleve = $eleve[$i]['id'];
+					$note = $classe['note'][$idEleve];
+					for($c=1;$c<=$classe['nbMois'];$c++){
+						$champ[$c] = $codeMatiere.'_'.$c;
+						$cle = $champ[$c];
+						$this->Cell(15,5,$note[$cle],1,0,'C');
+					}
+					$this->SetFont('Times','B',8);
+					$cleCote = $codeMatiere.'_cote';
+					$cleAppr = $codeMatiere.'_appr';
+					$this->Cell(16, 5, strtoupper($note[$codeMatiere]), 1, 0, 'C', true);
+					$this->Cell(16, 5, strtoupper($note[$cleCote]), 1, 0, 'C', true);
+					$this->Cell(16, 5, strtoupper($note[$cleAppr]), 1, 0, 'C', true);
+					$this->Ln(5);
+				}
+				$this->SetFont('Times', 'B', 11);
+				$totalNote = $classe['note'][$idEleve]['total'];
+				$totalCote = $classe['note'][$idEleve]['cote'];
+				$totalAppr = $classe['note'][$idEleve]['appr'];;
+				$this->Cell(75, 5, 'TOTAL ', 1, 0, 'C', true);
+				$this->Cell(10, 5, $classe['ponderation'], 1, 0, 'C', true);
+				for($d=1;$d<=$classe['nbMois'];$d++){
+					$cle = 'moyenne_'.$d;
+					$champ[$d] = $classe['note'][$idEleve][$cle];
+					// $cle = $champ[$c];
+					$this->Cell(15,5,$champ[$d],1,0,'C');
+				}
+				$this->Cell(16, 5, $totalNote, 1, 0, 'C', true);
+				$this->Cell(16, 5, $totalCote, 1, 0, 'C', true);
+				$this->Cell(16, 5, $totalAppr, 1, 0, 'C', true);
+				$this->Ln(15);
+
+				$libMG['fr'] = 'Moy. Generale : ';
+				$libMoy['fr'] = 'Moyenne : ';
+				$libRang['fr'] = 'Rang : ';
+				$libObs['fr'] = 'Observations Generales et Remarques';
+				$libObsTrim['fr'] = 'Observation Trimestrielle';
+				$libSignEns['fr'] = 'signature enseignant';
+				$libSignAdm['fr'] = 'signature administration';
+				$libSignParent['fr'] = 'signature parent';
+				$libMG['en'] = 'General Aver. : ';
+				$libMoy['en'] = 'Average : ';
+				$libRang['en'] = 'Rank : ';
+				$libObs['en'] = 'General Observation  and Remarks';
+				$libObsTrim['en'] = 'end of Term Observation';
+				$libSignEns['en'] = 'teacher signature';
+				$libSignAdm['en'] = 'administration signature';
+				$libSignParent['en'] = 'parent signature';
+				$libEval['fr'] = 'Effectif Evalué : ';
+				$libEval['en'] = 'Evaluated : ';
+				$moyenne = $classe['note'][$idEleve]['moyenne'];
+				$rank = $classe['note'][$idEleve]['rank'];
+				$moyenneGenerale = $classe['note'][$idEleve]['moy_gen'];
+				$evalues = $classe['note'][$idEleve]['evalues'];
+				$rang = $rank.' / '.$evalues;
+				$this->Cell(47, 5, $libMG[$section].$moyenneGenerale, 1, 0, 'C');
+				$this->Cell(48, 5, utf8_decode($libEval[$section]).$evalues, 1, 0, 'C');
+				$this->Cell(50, 5, $libMoy[$section].$moyenne, 1, 0, 'C', true);
+				$this->Cell(50, 5, $libRang[$section].$rang, 1, 0, 'C', true);
+				$this->SetFont('Times','BI',9);
+				$this->Ln(5);
+				$this->Cell(195, 5, strtoupper($libObs[$section]), 1, 1, 'C', true);
+				$this->Cell(65, 5, strtoupper($libObsTrim[$section]), 1, 0, 'C');
+				$this->Cell(45, 5, strtoupper($libSignEns[$section]), 1, 0, 'C');
+				$this->Cell(50, 5, strtoupper($libSignAdm[$section]), 1, 0, 'C');
+				$this->Cell(35, 5, strtoupper($libSignParent[$section]), 1, 0, 'C');
+				$this->Ln(5);
+				$this->Cell(65, 20, '', 1, 0, 'C');
+				$this->Cell(45, 20, '', 1, 0, 'C');
+				$this->Cell(50, 20, '', 1, 0, 'C');
+				$this->Cell(35, 20, '', 1, 0, 'C');
+				$this->Ln(25);
+				$faitA['fr'] = 'Fait a '.ucwords($_SESSION['information']['ville']).' le '.DATE('d / m / Y');
+				$faitA['en'] = 'Done at '.ucwords($_SESSION['information']['ville']).' the '.DATE('d / m / Y');
+				$this->Cell(180, 5, $faitA[$section], 0,0,'R');
+				$this->Ln(3);
+				$titre['fr'] = 'La Directrice';
+				$titre['en'] = 'The Director';
+				$this->Cell(180, 5, $titre[$section], 0,0,'R');
+			}
+		}
 		
 		
 	}

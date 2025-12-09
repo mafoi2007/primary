@@ -413,6 +413,49 @@
 					}
 				}
 			}
+
+
+
+
+
+			// On imprime le bulletin Mensuel des élèves de la classe 
+			elseif($print ==='bulletinTrimestre'){
+
+				$print = $_POST['to_print'];
+				$classe = (int) $_POST['classe'];
+				$trimestre = (int)$_POST['trimestre'];
+				if($classe==0){
+					$_SESSION['message'] = 'Vous devez choisir une classe.';
+					header('Location:'.$source);
+				}else{
+					if($trimestre==0){
+						$_SESSION['message'] = 'Sélectionnez un trimestre.';
+						header('Location:'.$source);
+					}else{
+						$bull = $config->configBulletinTrimestre($classe, $trimestre);
+						$_SESSION['print'] = $print;
+						$_SESSION['classe'] = $bull;
+						// echo'<pre>'; print_r($bull['listeMatiere']); echo '</pre>';
+						header('Location:print_pdf.php');
+					}
+				}
+				/*if($classe=='null'){
+					$_SESSION['message'] = 'Vous devez choisir une classe.';
+					header('Location:'.$source);
+				}else{
+					if($mois=='null'){
+						$_SESSION['message'] = 'Vous devez choisir un mois.';
+						header('Location:'.$source);
+					}else{
+						$bull = $config->configBulletinMensuel($classe, $mois);
+						
+						// echo '<pre>'; print_r($bull['totalNote']); echo '</pre>';
+						$_SESSION['print'] = $print;
+						$_SESSION['classe'] = $bull;
+						header('Location:print_pdf.php');
+					}
+				}*/
+			}
 			
 			// La vue d'ensemble des effectifs 
 			elseif($print=='vueEffectif'){
@@ -551,31 +594,70 @@
 						$_SESSION['message'] .= ' ne peut se poursuivre. Contactez le concepteur du logicel';
 						header('Location:'.$source);
 					}
-					
-					
-					// Le code commenté suivant sera utilisé pour générer le bulletin mensuel
+				}
+			}
+		}
+
+
+
+
+
+
+
+		// On lance le traitement trimestriel des notes 
+		if(isset($_POST['traitementTrimestriel'])){
+			echo '<pre>'; print_r($_POST); echo '</pre>';
+			$classe = $_POST['classe'];
+			$trimestre = (int) $_POST['trimestre'];
+			if($classe=='null'){
+				$_SESSION['message'] = 'Aucune classe n a été choisie.';
+				header('Location:'.$source);
+			}else{
+				if($trimestre==0){
+					$_SESSION['message'] = 'Vous devez préciser un trimestre.';
+					header('Location:'.$source);
+				}else{
+					/**
+					 * On fait le traitement selon le trimestre. Pour ce faire, on vérifie 
+					 * que les traitements ont été faits dans la table appropriée. Sinon, 
+					 * on refuse de la ncer le traitement.
+					 */
+					if($trimestre==1){
+						$verif = $config->verifTrimUn($classe);
+						if($verif==true){
+							$_SESSION['message'] = 'Certains mois pour le trimestre 1 n ont pas été traités';
+							header('Location:'.$source);
+						}else{
+							$config->traiterNoteTrimestrielle($source, $classe, $trimestre);
+						}
+					}elseif($trimestre==2){
+						$verif = $config->verifTrimDeux($classe);
+						if($verif==true){
+							$_SESSION['message'] = 'Certains mois pour le trimestre 2 n ont pas été traités';
+							header('Location:'.$source);
+						}else{}
+					}elseif($trimestre==3){
+						$verif = $config->verifTrimTrois($classe);
+						if($verif==true){
+							$_SESSION['message'] = 'Certains mois pour le trimestre 3 n ont pas été traités';
+							header('Location:'.$source);
+						}else{}
+					}
+					/*$listeMatiere = $config->listeMatiereClasse($classe);
+					$matiereSaisie = $config->getNoteSaisieMois($classe, $mois);
+					$nombre = count($listeMatiere);
+					$nombreMatiereSaisie = count($matiereSaisie);*/
 					/*if($nombreMatiereSaisie<$nombre){
-						
-						
-						
-						
-					}elseif(){
-						
-						
-						$_SESSION['classe']['eleve'] = $bulletin['eleve'];
-						$_SESSION['classe']['section'] = $bulletin['section'];
-						$_SESSION['classe']['effectif'] = $bulletin['effectif'];
-						$_SESSION['classe']['moisCourant'] = $bulletin['moisCourant'];
-						$_SESSION['classe']['listeMatiere'] = $bulletin['listeMatiere'];
-						$_SESSION['classe']['listeSousMatiere'] = $bulletin['listeSousMatiere'];
-						$_SESSION['classe']['noteEleve'] = $bulletin['noteEleve'];
-						
-						// echo '<pre>'; print_r($_SESSION['classe']['noteEleve']); echo '</pre>';
-						
+						$nb = $nombre - $nombreMatiereSaisie;
+						$_SESSION['message'] = 'Il reste encore '.$nb.' matières';
+						$_SESSION['message'] .= ' non saisies pour le mois que vous avez choisi.';
+						header('Location:'.$source);
+					}elseif($nombreMatiereSaisie==$nombre){
+						$config->traiterNoteMensuelle($source, $classe, $mois);
 					}else{
-						
-						
-						
+						$_SESSION['message'] = 'une erreur fatale s est produite et le traitement ';
+						$_SESSION['message'] .= ' ne peut se poursuivre. Contactez le concepteur du logicel';
+						header('Location:'.$source);
 					}*/
 				}
 			}
