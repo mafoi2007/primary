@@ -1,4 +1,4 @@
-<h1 class='alert'>Modifier des Notes</h1>
+<h1 class='alert'>Révendication des Notes</h1>
 <form method='post' action='../traitement.php'>
 	<?php $listeMois = $config->getMoisSaisi($_SESSION['user']['classeTenue']['id']);
 	$compteur = count($listeMois);
@@ -6,8 +6,8 @@
 	if($compteur==0){ // Aucune note encore insérée.
 		echo "<h3 class='alert'>La classe n'a encore aucune note enregistrée.</h3>";
 	}else{ ?>
-		<p>Mois :
-			<select name='mois' id='mois' onChange='showMatiereSaisie()'>
+		Mois :
+			<select name='mois' id='mois' onChange='showMatiereSaisieRev()'>
 				<?php 
 				for($i=0;$i<$compteur;$i++){
 					echo "<option value='".$listeMois[$i]['periode']."'>Mois ".$listeMois[$i]['periode']."</option>\n";
@@ -15,8 +15,7 @@
 				?>
 				<option value='null' selected>-Choisir un Mois-</option>
 			</select>
-		</p>
-		<div id='matiere'>
+		<div id='matiere' style = display:inline>
 		</div>
 		
 <?php 

@@ -76,7 +76,7 @@
 			$this->_note = str_replace(',', '.', $note);
 			if($this->_note <= 0){
 				$this->_note = NULL;
-			}elseif($this->_note > 100){
+			}elseif($this->_note > 500){
 				$this->_note = NULL;
 			}else{
 				$this->_note = (float) $this->_note;
@@ -725,6 +725,30 @@
 					}
 				}
 			}
+		}
+
+
+
+
+
+
+
+
+
+		public function changeClasseEleve($source, $info){
+			// echo '<pre>'; print_r($info); echo '</pre>';
+			$this->_classe = $this->setUserId($info['classeEleve']);
+			$this->_eleve = $this->setUserId($info['idEleve']);
+			$infoEleve = $this->getEleve($this->_eleve);
+			$infoClasse = $this->getClasse($this->_classe);
+			$sqlEleve =  $this->_db->prepare("UPDATE eleve SET classe =:classe WHERE id=:eleve");
+			$sqlEleve->execute(array("classe"=>$this->_classe, "eleve"=>$this->_eleve));
+			$sqlNote = $this->_db->prepare("UPDATE note SET classe=:classe WHERE eleve=:eleve");
+			$sqlNote->execute(array("classe"=>$this->_classe, "eleve"=>$this->_eleve));
+			$_SESSION['message'] = 'L élève '.$infoEleve['nom_complet'].' est maintenant en '.$infoClasse['libelle_classe'];
+			// echo $_SESSION['message'];
+			// print_r($infoClasse);
+			header('Location:'.$source);
 		}
 		
 		
@@ -1767,41 +1791,73 @@
 		
 		
 		
-		
+		/**
+		 * On a validé l'insertion des NOTES dans la table note
+		 * @param $source string
+		 * @param $note array
+		 * @return void 
+		 */
 		// On ajoute les notes à la base de donnéees 
 		public function ajouterNote($source, $note){
+			// echo '<pre>'; print_r($note); echo '</pre>';
 			$eleve = $note['eleve'];
-			$matiere = $note['matiere'];
-			$periode = $note['mois'];
-			$subject = $note['subject'];
+			$periode = $this->setUserId($note['mois']);
+			$subject = $this->setUserId($note['subject']);
 			$notes = $note['note'];
+			$matiere[] = 'oral';
+			$matiere[] = 'ecrit';
+			$matiere[] = 'prat';
+			$matiere[] = 'se';
 			$this->_classe = $_SESSION['user']['classeTenue']['id'];
 			$this->_date = DATE('Y-m-d H:i:s');
 			$navig = $this->getNavigateur();
 			$this->_os = $navig['os'];
 			$this->_ip = $_SERVER['REMOTE_ADDR'];
+			$ponderationMatiere = $this->getPonderationMatiere($subject, $this->_classe);
+
+			// Je paramètre pour l'enregistrement des Notes en un tour 
 			for($i=0;$i<count($matiere);$i++){
-				$this->_matiere = $this->setUserId($matiere[$i]);
-				for($j=0;$j<count($eleve);$j++){
-					$this->_eleve = $this->setUserId($eleve[$j]);
-					$this->_note = $this->setNote($notes[$i][$j]);
-					$insertion = $this->_db->prepare('INSERT INTO note 
-														SET 
-														eleve=:eleve,
-														matiere=:matiere,
-														sous_matiere=:sousMatiere,
-														periode=:periode,
-														note=:note');
-					$insertion->bindValue(':eleve', $this->_eleve);
-					$insertion->bindValue(':matiere', $subject);
-					$insertion->bindValue(':sousMatiere', $this->_matiere);
-					$insertion->bindValue(':periode', $periode);
-					$insertion->bindValue(':note', $this->_note);
-					$insertion->execute();
-				}
+				$this->_matiere = $matiere[$i];
+				$marks[$this->_matiere] = $notes[$i];
 			}
-			$this->journalSaisieNote($this->_classe, $subject,
-									$periode, $this->_date,
+			// Je lance l'enregistrement des notes 
+			$w = 1;
+			for($x=0;$x<count($eleve);$x++){
+				$idEleve = $this->setUserId($eleve[$x]);
+				$oralEleve = $this->setNote($marks['oral'][$x]);
+				$ecritEleve = $this->setNote($marks['ecrit'][$x]);
+				$pratEleve = $this->setNote($marks['prat'][$x]);
+				$seEleve = $this->setNote($marks['se'][$x]);
+				$total = array($oralEleve, $ecritEleve, $pratEleve, $seEleve);
+				$cote = $this->getAppreciation($this->setNote(array_sum($total)), $ponderationMatiere);
+				$appr = $this->getLibelleAppreciation($cote, $_SESSION['user']['classeTenue']['section']);
+				$insertion = $this->_db->prepare("INSERT INTO note SET 
+											eleve =:eleve,
+											classe =:classe,
+											periode =:periode,
+											competence =:competence,
+											oral =:oral,
+											ecrit =:ecrit,
+											prat =:prat,
+											se =:se,
+											total =:total,
+											cote =:cote,
+											appr =:appr");
+				$insertion->bindValue(':eleve', $idEleve);
+				$insertion->bindValue(':classe', $this->_classe);
+				$insertion->bindValue(':periode', $periode);
+				$insertion->bindValue(':competence', $subject);
+				$insertion->bindValue(':oral', $oralEleve);
+				$insertion->bindValue(':ecrit', $ecritEleve);
+				$insertion->bindValue(':prat', $pratEleve);
+				$insertion->bindValue(':se', $seEleve);
+				$insertion->bindValue(':cote', $cote);
+				$insertion->bindValue(':appr', $appr);
+				$insertion->bindValue(':total', $this->setNote(array_sum($total)));
+				$insertion->execute();
+			}
+			// J'inscris dans le journal desaisie des notes
+			$this->journalSaisieNote($this->_classe, $subject, $periode, $this->_date,
 									$this->_ip, $this->_os);
 			$_SESSION['message'] = 'Les notes ont été enregistrées.';
 			header('Location:'.$source);
@@ -1813,60 +1869,117 @@
 		
 		// On modifie les notes saisies  
 		public function modifierNote($source, $note){
-			$periode = $this->setUserId($note['mois']);
-			$subject = $note['subject'];
-			$matiere = $note['matiere'];
+			$oral = $note['oral'];
+			$ecrit = $note['ecrit'];
+			$prat = $note['prat'];
+			$se = $note['se'];
 			$eleve = $note['eleve'];
-			$notes = $note['note'];
 			$this->_classe = $_SESSION['user']['classeTenue']['id'];
 			$this->_date = DATE('Y-m-d H:i:s');
-			
-			$this->journalUpdateNote($this->_classe, $subject, 
-											$periode, $this->_date);
-			for($i=0;$i<count($notes);$i++){
-				// Ici, on récupère les notes par élève.
-				$this->_idEleve = $this->setUserId($eleve[$i]);
-				// Pour chaque élève, on gère ses matières. 
-				for($a=0;$a<count($matiere);$a++){
-					$this->_idMatiere = $this->setUserId($matiere[$a]);
-					$this->_noteEleve = $this->setNote($notes[$i][$a]);
-					// On supprime la note et après on fat une nouvelle insertion 
-					$delete = $this->_db->prepare("DELETE FROM note 
-														WHERE eleve =:eleve
-															AND sous_matiere =:matiere 
-															AND periode =:periode");
-					$delete->bindValue(':eleve',$this->_idEleve);
-					$delete->bindValue(':matiere',$this->_idMatiere);
-					$delete->bindValue(':periode',$periode);
-					$delete->execute();
-					$insertion = $this->_db->prepare("INSERT INTO note SET 
-															note =:note,
-															eleve =:eleve,
-															sous_matiere =:matiere,
-															periode =:periode");
-					$insertion->bindValue(':note', $this->_noteEleve);
-					$insertion->bindValue(':eleve', $this->_idEleve);
-					$insertion->bindValue(':matiere', $this->_idMatiere);
-					$insertion->bindValue(':periode',$periode);
-					$insertion->execute();
-
-
-
-
-
-					/*$execution = $this->_db->prepare("UPDATE note SET
-												note = :note
-												WHERE eleve = :eleve
-													AND sous_matiere = :matiere
-													AND periode = :periode");
-					$execution->execute(array(
-									'note'=>$this->_noteEleve,
-									'eleve'=>$this->_idEleve,
-									'matiere'=>$this->_idMatiere,
-									'periode'=>$periode));*/
-				}
+			$subject = $this->setUserId($note['subject']);
+			$periode = $this->setUserId($note['mois']);
+			$ponderationMatiere = $this->getPonderationMatiere($subject, $this->_classe);
+			for($i=0;$i<count($eleve);$i++){
+				$this->_eleve = $this->setUserId($eleve[$i]);
+				$this->_ecrit = $this->setNote($ecrit[$i]);
+				$this->_oral = $this->setNote($oral[$i]);
+				$this->_prat = $this->setNote($prat[$i]);
+				$this->_se = $this->setNote($se[$i]);
+				$total = array($this->_ecrit, $this->_oral, $this->_prat, $this->_se);
+				$this->_total = $this->setNote(array_sum($total));
+				$cote = $this->getAppreciation($this->_total, $ponderationMatiere);
+				$appr = $this->getLibelleAppreciation($cote, $_SESSION['user']['classeTenue']['section']);
+				// echo '<p>Le total est '.$this->_total.'</p>';
+				$update = $this->_db->prepare("UPDATE note SET 
+										oral =:oral,
+										ecrit =:ecrit,
+										prat =:prat,
+										se =:se,
+										cote =:cote,
+										appr =:appr,
+										total =:total
+										WHERE id =:id");
+				$update->bindValue(':oral', $this->_oral);
+				$update->bindValue(':ecrit', $this->_ecrit);
+				$update->bindValue(':prat', $this->_prat);
+				$update->bindValue(':se', $this->_se);
+				$update->bindValue(':cote', $cote);
+				$update->bindValue(':appr', $appr);
+				$update->bindValue(':total', $this->_total);
+				$update->bindValue(':id', $this->_eleve);
+				$update->execute();
 			}
+			$this->journalUpdateNote($this->_classe, $subject, $periode, $this->_date);
 			$_SESSION['message'] = 'Les notes ont été mises à jour.';
+			header('Location:'.$source);
+		}
+
+
+
+
+
+
+
+		/**
+		 * On modifie les notes sur la base des révendications
+		 * @param string $source
+		 * @param array $note
+		 * 
+		 */
+		public function modifierNoteRevendic($source, $note){
+			echo '<pre>'; print_r($note); echo '</pre>';
+			$matiere = $note['matiere'];
+			$oral = $note['oral'];
+			$ecrit = $note['ecrit'];
+			$prat = $note['prat'];
+			$se = $note['se'];
+			$eleve = $this->setUserId($note['eleve']);
+			$mois = $this->setUserId($note['mois']);
+			$infoEleve = $this->getEleve($eleve);
+			for($x=0;$x<count($matiere);$x++){
+				$this->_matiere = $this->setUserId($matiere[$x]);
+				$this->_oral = $this->setNote($oral[$x]);
+				$this->_ecrit = $this->setNote($ecrit[$x]);
+				$this->_prat = $this->setNote($prat[$x]);
+				$this->_se = $this->setNote($se[$x]);
+				$total = array($this->_oral, $this->_ecrit, $this->_prat, $this->_se);
+				$this->_total = $this->setNote(array_sum($total));
+				// echo "<p>L'élève ".$eleve." obtient en $this->_matiere les notes 
+				// suivantes : ".$this->_oral.", ".$this->_ecrit.", ".$this->_prat." et ".$this->_se."
+				// soit un TOTAL DE <b>".$this->_total."</b></p>";
+				$delete = $this->_db->prepare("DELETE FROM note 
+												WHERE 
+												eleve =:eleve AND 
+												competence =:matiere AND
+												periode =:mois");
+				$delete->execute(array(
+								"eleve"=>$eleve,
+								"matiere"=>$this->_matiere,
+								"mois"=>$mois
+				));
+				$insert = $this->_db->prepare("INSERT INTO note SET 
+												eleve =:eleve,
+												classe =:classe,
+												periode =:periode,
+												competence =:competence,
+												oral =:oral,
+												ecrit =:ecrit,
+												prat =:prat, 
+												se =:se,
+												total =:total");
+				$insert->execute(array(
+								"eleve"=>$eleve,
+								"classe"=>$_SESSION['user']['classeTenue']['id'],
+								"periode"=>$mois,
+								"competence"=>$this->_matiere,
+								"oral"=>$this->_oral,
+								"ecrit"=>$this->_ecrit,
+								"prat"=>$this->_prat,
+								"se"=>$this->_se,
+								"total"=>$this->_total
+				));
+			}
+			$_SESSION['message'] = "Les notes de ".$infoEleve['nom_complet']." ont été mises à jour pour le mois ".$mois;
 			header('Location:'.$source);
 		}
 		
@@ -1880,12 +1993,25 @@
 							date_saisie,
 							DATE_FORMAT(date_saisie, '%d / %m / %Y') as date_fr,
 							DATE_FORMAT(date_saisie, '%Hh %imin %sSec') as heure_fr
-					FROM note_saisie, classe, liste_competence 
+					FROM note_saisie, classe, liste_competence
 					WHERE classe='$classe'
-						AND matiere = '$matiere' 
-						AND periode = '$periode'
+						AND matiere='$matiere'
+						AND periode='$periode'
 						AND classe.id = classe
-						AND matiere = liste_competence.id";
+						AND matiere = liste_competence.id
+						";
+			// $sql = "SELECT classe, libelle_classe, matiere, 
+			// 				libelle_competence_fr, libelle_competence_en,
+			// 				periode, ip_saisie, type_machine,
+			// 				date_saisie,
+			// 				DATE_FORMAT(date_saisie, '%d / %m / %Y') as date_fr,
+			// 				DATE_FORMAT(date_saisie, '%Hh %imin %sSec') as heure_fr
+			// 		FROM note_saisie, classe, liste_competence 
+			// 		WHERE classe='$classe'
+			// 			AND matiere = '$matiere' 
+			// 			AND periode = '$periode'
+			// 			AND classe.id = classe
+			// 			AND matiere = liste_competence.id";
 			$req = $this->_db->query($sql);
 			$res = $req->fetch(PDO::FETCH_ASSOC);
 			return $res;
@@ -1953,7 +2079,7 @@
 							periode, note, observation, nb_point, libelle_sous_competence_fr,
 							libelle_sous_competence_en, code_sous_competence
 							 
-					FROM note, eleve, liste_competence, matiere, liste_sous_competence 
+					FROM notes, eleve, liste_competence, matiere, liste_sous_competence 
 					WHERE eleve = '$eleve' 
 						AND matiere = '$matiere' 
 						AND periode = '$periode'
@@ -1971,6 +2097,7 @@
 		
 		// On supprime les notes saisies pour une période 
 		public function deleteNote($source, $periode, $matiere, $classe){
+			echo '<pre>'; print_r($_POST); echo '</pre>';
 			$this->_periode = $this->setUserId($periode);
 			$this->_subject = $this->setUserId($matiere);
 			$this->_classe = $this->setUserId($classe);
@@ -1981,36 +2108,31 @@
 				$_SESSION['message'] = 'Une erreur inconnue s est produite';
 				header('Location:'.$source);
 			}else{
-				// On commence par supprimer du Journal 
+				// On commence par supprimer du Journal
 				$journal = $this->_db->prepare("DELETE FROM note_saisie
-											WHERE classe = :classe
-											AND matiere = :matiere
-											AND periode = :periode");
+												WHERE classe = :classe
+												AND matiere = :matiere
+												AND periode = :periode");
 				$journal->execute(array(
 										'classe'=>$this->_classe,
 										'matiere'=>$this->_subject,
 										'periode'=>$this->_periode
 										));
-				// Ensuite de la table note 
-				$listeEleve = $this->listeEleve($this->_classe, 'non_supprime', $as);
-				for($x=0;$x<count($listeEleve);$x++){
-					$idEleve = $listeEleve[$x]['id'];
-					// echo '<p>'.$x.'- '.$idEleve.'</br />';
-					$noteDelete = $this->_db->prepare("DELETE FROM note 
-												WHERE eleve =:eleve
-												AND matiere=:matiere
-												AND periode=:periode");
-					$noteDelete->execute(array(
-										'eleve'=>$idEleve,
+				// Ensuite de la table note
+				$noteDelete = $this->_db->prepare("DELETE FROM note
+												WHERE classe =:classe
+												AND periode=:periode
+												AND competence=:matiere");
+				$noteDelete->execute(array(
+										'classe'=>$this->_classe,
 										'matiere'=>$this->_subject,
 										'periode'=>$this->_periode
-					));
-				}
-				
+										));
 				// On affiche le message
 				$_SESSION['message'] = 'Les notes ont été supprimées.';
 				header('Location:'.$source);
 			}
+			// echo '<pre>'; print_r($a); echo '</pre>';
 		}
 		
 		
@@ -2077,6 +2199,37 @@
 			$ponderation = array_sum($ponderations);
 			return $ponderation;
 		}
+
+
+
+
+
+
+
+		/**
+		 * Les Notes obtenues par les élèves d'une classe au cours d'un mois précis
+		 */
+		public function noteEleveClasse($classe, $mois){
+			$listeEleve = $this->listeEleve($classe, 'non_supprime', '');
+			for($i=0;$i<count($listeEleve);$i++){
+				$idEleve = $listeEleve[$i]['id'];
+				$sql = "SELECT * 
+						FROM note 
+						WHERE classe = '$classe'
+							AND periode = '$mois' 
+							ANd eleve = '$idEleve' ";
+				$req = $this->_db->query($sql);
+				$res[$i] = $req->fetchAll(PDO::FETCH_ASSOC);
+			}
+			return $res;
+		}
+
+
+
+
+
+
+
 		
 		
 		
@@ -2087,40 +2240,91 @@
 			$as = $this->getCurrentYear();
 			$tableNote = 'mensuel_'.$this->_mois.'_'.$this->_classe;
 			$listeEleve = $this->listeEleve($this->_classe, 'non_supprime', $as);
-			$section = $this->getSection($this->_classe);
-			$classe = $this->getClasse($this->_classe);
-			$enseignant = $this->getUser($classe['enseignant']);
-			$mois = $this->getMoisCourant($this->_mois);
-			$listeMatiere = $this->listeMatiereClasse($this->_classe);
-			$listeSousMatiereAll = $this->listeSousMatiere();
-			for($i=0;$i<count($listeEleve);$i++){
-				$idEleve = $listeEleve[$i]['id'];
-				for($j=0;$j<count($listeMatiere);$j++){
-					$idMatiere = $listeMatiere[$j]['id_competence'];
-					$notes[$idEleve][$idMatiere] = $this->noteEleveMatiere($idEleve, $idMatiere, $this->_mois);
-					$ponderationsMatiere[$idEleve][$idMatiere] = $this->getPonderationMatiere($idMatiere, $this->_classe);
-				}
-				
-			}
-			$ponderation = $this->getPonderationClasse($this->_classe);
+			$notesEleve = $this->noteEleveClasse($this->_classe, $this->_mois);
 			$totalNote = $this->totalNoteEleve($this->_classe, $this->_mois);
-			$ponderationMatiere = $ponderationsMatiere;
+			$section = $this->getSection($this->_classe);
+			$listeMatiere = $this->listeMatiereClasse($this->_classe);
+			$listeSousMatiere['fr'] = array('oral', 'ecrit', 'pratique', 'savoir - etre');
+			$listeSousMatiere['en'] = array('oral','written','practical','attitude');
+			$infoClasse = $this->getClasse($this->_classe);
+			$enseignant = $this->getUser($infoClasse['enseignant']);
+			$mois = $this->getMoisCourant($this->_mois);
+			for($x=0;$x<count($listeMatiere);$x++){
+				$idMatiere = $listeMatiere[$x]['id_competence'];
+				$ponderationMatiere[$x] = $this->getPonderationMatiere($idMatiere, $this->_classe);
+			}
+			// 
+			// $listeSousMatiereAll = $this->listeSousMatiere();
+			// for($i=0;$i<count($listeEleve);$i++){
+			// 	$idEleve = $listeEleve[$i]['id'];
+			// 	for($j=0;$j<count($listeMatiere);$j++){
+			// 		$idMatiere = $listeMatiere[$j]['id_competence'];
+			// 		$notes[$idEleve][$idMatiere] = $this->noteEleveMatiere($idEleve, $idMatiere, $this->_mois);
+			// 		$ponderationsMatiere[$idEleve][$idMatiere] = $this->getPonderationMatiere($idMatiere, $this->_classe);
+			// 	}
+				
+			// }
+			// $ponderation = $this->getPonderationClasse($this->_classe);
+			// $totalNote = $this->totalNoteEleve($this->_classe, $this->_mois);
+			// $ponderationMatiere = $ponderationsMatiere;
 
 			
 
-			$configuration['totalNote'] = $totalNote;
-			$configuration['note'] = $notes;
-			$configuration['eleve'] = $listeEleve;
-			$configuration['section'] = $section;
-			$configuration['infoClasse'] = $classe;
-			$configuration['enseignant'] = $enseignant;
-			$configuration['moisCourant'] = $mois;
-			$configuration['listeMatiere'] = $listeMatiere;
-			$configuration['listeSousMatiereAll'] = $listeSousMatiereAll;
-			$configuration['ponderation'] = $ponderation;
+			
+			// $configuration['infoClasse'] = $classe;
+			// 
+			
+			
+			// 
+			// 
+			
+			// 
+			
+			// 
+			
+			// 
+			// $configuration['listeSousMatiereAll'] = $listeSousMatiereAll;
+			// $configuration['ponderation'] = $ponderation;
 			$configuration['ponderationMatiere'] = $ponderationMatiere;
-			// $configuration['listeSousMatiere'] = $listeSousMatiereClasse;
+			$configuration['moisCourant'] = $mois;
+			$configuration['infoClasse'] = $infoClasse;
+			$configuration['enseignant'] = $enseignant;
+			$configuration['listeSousMatiere'] = $listeSousMatiere;
+			$configuration['listeMatiere'] = $listeMatiere;
+			$configuration['section'] = $section;
+			$configuration['totalNote'] = $totalNote;
+			$configuration['note'] = $notesEleve;
+			$configuration['eleve'] = $listeEleve;
 			return $configuration;
+		}
+
+
+
+
+
+
+
+
+		/**
+		 * On ressort s'il y'a lieu les notes d'un élève pour une sequence donnée.
+		 * Ceci est utile pour la révendication des notes d'un élève
+		 * @param string $eleve
+		 * @param string $mois
+		 * @return array $notes
+		 */
+		public function noteEleveRevendic($eleve,$mois){
+			$this->_eleve = $this->setUserId($eleve);
+			$this->_mois = $this->setUserId($mois);
+			$sql = "SELECT eleve, note.classe as classe, periode, competence, oral, ecrit, prat, se, total, 
+							note.id  as idNote, nom_complet, libelle_competence_fr, libelle_competence_en
+					FROM note, eleve, liste_competence
+					WHERE eleve = '$this->_eleve'
+						AND periode = '$this->_mois'
+						AND eleve.id = note.eleve
+						AND liste_competence.id = note.competence";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			return $res;
 		}
 
 
@@ -2248,6 +2452,7 @@
 			$this->_mois = $this->setUserId($mois);
 			$this->_section = $this->getSection($this->_classe);
 			$this->_as = $this->getCurrentYear();
+			$infoClasse = $this->getClasse($this->_classe);
 			// On crée la table qui va recevoir les données 
 			$this->prepaTableMensuelle($this->_classe, $this->_mois);
 			
@@ -2255,13 +2460,13 @@
 			$this->addDataMensuel($this->_classe, $this->_mois);
 
 			// On fait la vérification pour savoir si on doit calculer ou pas 
-			$this->verificationClassementMensuel($this->_classe, $this->_mois);
+			/*$this->verificationClassementMensuel($this->_classe, $this->_mois);*/
 			
 			// On lance le calcul des Notes et des moyennes 
 			$this->calculNoteMensuel($this->_classe, $this->_mois);
 			
 			// On informe que tout s'est bien passé 
-			$_SESSION['message'] = 'Notes traitées. Imprimez le bulletin Mensuel';
+			$_SESSION['message'] = 'Notes de '.$infoClasse['libelle_classe'].' traitées. Imprimez le bulletin Mensuel';
 			header('Location:'.$source);
 		}
 
@@ -2281,13 +2486,13 @@
 			$creation = "CREATE TABLE $nomTable ( ";
 			$creation .= "id int(11) auto_increment primary key, ";
 			$creation .= "eleve int(11) not null, ";
-			for($a=0;$a<count($listeMatiere);$a++){
+			/*for($a=0;$a<count($listeMatiere);$a++){
 				$codeMatiere = $listeMatiere[$a]['code_competence'];
 				$idMatiere = $listeMatiere[$a]['id_competence'];
 				$creation .= $codeMatiere.' float(4,2) null, ';
 				$creation .= $codeMatiere.'_cote varchar(5) null, ';
 				$creation .= $codeMatiere.'_appr varchar(10) null, ';
-			}
+			}*/
 			$creation .= "total float(5,2) null, ";
 			$creation .= "cote varchar(5) null , ";
 			$creation .= "appr varchar(10) null,";
@@ -2352,7 +2557,7 @@
 					$creation .= $codeMatiere.'_appr varchar(10) null, ';
 				}
 			}
-			// On crée les champs qui vont stocker les notes mensuelles
+			// On crée les champs qui vont stocker les moyennes mensuelles
 			if($trimestre==1){
 				$creation .= 'moyenne_1 float(4,2) null,';
 				$creation .= 'moyenne_2 float(4,2) null,';
@@ -2394,49 +2599,145 @@
 			$nomTable = 'mensuel_'.$mois.'_'.$classe;
 			$as = $this->getCurrentYear();
 			$listeEleve = $this->listeEleve($classe, 'non_supprime', $as);
+			$ponderationClasse = $this->getPonderationClasse($classe);
 			for($i=0;$i<count($listeEleve);$i++){
 				$idEleve = $listeEleve[$i]['id'];
-				$listeMatiere = $this->listeMatiereClasse($classe);
-				for($j=0;$j<count($listeMatiere);$j++){
-					$idMatiere = $listeMatiere[$j]['id_competence'];
-					$codeMatiere = $listeMatiere[$j]['code_competence'];
-					$sql = "SELECT SUM(note) as note
+				$sql = "SELECT SUM(total) as total
+						FROM note 
+						WHERE periode = '$mois' 
+							AND eleve = '$idEleve' ";
+				$req = $this->_db->query($sql);
+				$res = $req->fetch(PDO::FETCH_ASSOC);
+				
+				// On veut savoir dans combien de matière l'élève a été évalué 
+				$sql_verif = "SELECT competence
 							FROM note
-							WHERE eleve = '$idEleve'
-								AND periode = '$mois'
-								AND matiere = '$idMatiere'";
-					$req = $this->_db->query($sql);
-					$res = $req->fetch(PDO::FETCH_ASSOC);
-					$totalEleve = $this->setNote($res['note']);
-					$totalGeneral[$idEleve][] = $totalEleve;
-					$nomChamp = $codeMatiere;
-					$champAppr = $codeMatiere.'_appr';
-					$champCote = $codeMatiere.'_cote';
-					$champPondClasse = 'ponderation_classe';
-					$ponderation = $this->getPonderationMatiere($idMatiere, $classe);
-					$ponderationClasse = $this->getPonderationClasse($classe);
-
-					$cote = $this->getAppreciation($totalEleve,$ponderation);
-					$section = $this->getSection($classe);
-					$appr = $this->getLibelleAppreciation($cote, $section);
-					$update = $this->_db->prepare("UPDATE $nomTable SET
-												$nomChamp = :valeur,
-												$champCote = :cote,
-												$champAppr = :appr,
-												$champPondClasse = :pond
-												WHERE eleve = '$idEleve'");
-					$update->execute(array('valeur'=>$totalEleve,
-											'cote'=>$cote,
-											'pond'=>$ponderationClasse,
-											'appr'=>$appr));
+							WHERE periode = '$mois'
+								AND eleve = '$idEleve'
+								AND total > 0";
+				$req_verif = $this->_db->query($sql_verif);
+				$res_verif = $req_verif->fetchAll(PDO::FETCH_ASSOC);
+				for($x=0; $x<count($res_verif); $x++){
+					$pondMat[$i][] = $this->getPonderationMatiere($res_verif[$x]['competence'], $classe);
 				}
-				$totalPoint = array_sum($totalGeneral[$idEleve]);
-				$requete = $this->_db->prepare("UPDATE $nomTable SET
-												total = :total
-												WHERE eleve = '$idEleve'");
-				$requete->execute(array('total'=>$totalPoint));
+				if(!empty($pondMat[$i])){
+					$ponderationMatiere = $this->setNote(array_sum($pondMat[$i]));
+				}else{
+					$ponderationMatiere = NULL;
+				}
+				$classement = $ponderationClasse * 50 / 100;
+				$section = $this->getSection($classe);
+				$cote = $this->getAppreciation($res['total'],$ponderationMatiere);
+				$appr = $this->getLibelleAppreciation($cote, $section);
+				// echo $ponderationMatiere.'<br/>';
+				if($ponderationMatiere>=$classement){
+					$moyenne = $res['total'] * 20 / $ponderationMatiere;
+				}else{
+					$moyenne = NULL;
+				}
+				// echo '<p><b>'.$moyenne.'</b></p>';
+				// echo '<pre>'; print_r($res_verif); echo '</pre>';
+				$insertion = $this->_db->prepare("UPDATE $nomTable SET 
+													total =:total,
+													ponderation_classe =:ponderationClasse,
+													ponderation =:ponderation,
+													cote =:cote,
+													appr =:appr,
+													moyenne =:moyenne
+												WHERE eleve =:eleve");
+				$insertion->execute(array(
+								"total"=>$this->setNote($res['total']),
+								"ponderationClasse"=>$ponderationClasse,
+								"ponderation"=>$ponderationMatiere,
+								"cote"=>$cote,
+								"appr"=>$appr,
+								"moyenne"=>$this->setNote(round($moyenne,2)),
+								"eleve"=>$idEleve
+				));
+				
 			}
 		}
+
+
+
+
+
+
+
+
+		/**
+		 * On ressort toutes les notes obtenues par un élève au cours d'un trimestre 
+		 * quelque soit la matière 
+		*/
+		private function getNoteTrimestreEleve($eleve, $trimestre){
+			if($trimestre == 1){
+				$mois = array(1,2,3);
+			}elseif($trimestre == 2){
+				$mois = array(4,5,6);
+			}elseif($trimestre == 3){
+				$mois = array(7,8);
+			}
+			for($x=0;$x<count($mois);$x++){
+				$sql = "SELECT competence, total
+						FROM note 
+						WHERE eleve='$eleve'
+							AND periode='$mois[$x]' ";
+				$req = $this->_db->query($sql);
+				$res = $req->fetchAll(PDO::FETCH_ASSOC);
+				$resultat[] = $res;
+			}
+			return $resultat;
+		}
+
+
+
+
+
+
+
+
+
+		/**
+		 * On ressort les moyennes mensuelles obtenues par un élève au cours 
+		 * d'un trimestre
+		 */
+		private function getMoyenneTrimestreEleve($eleve, $trimestre){
+			// Quelle classe fait l'élève ? 
+			$infoEleve = $this->getEleve($eleve);
+			$classeEleve = $infoEleve['classe'];
+			if($trimestre == 1){
+				$info1 = "mensuel_1_".$classeEleve;
+				$info2 = "mensuel_2_".$classeEleve;
+				$info3 = "mensuel_3_".$classeEleve;
+				$mois = array($info1, $info2, $info3);
+			}elseif($trimestre == 2){
+				$info1 = "mensuel_4_".$classeEleve;
+				$info2 = "mensuel_5_".$classeEleve;
+				$info3 = "mensuel_6_".$classeEleve;
+				$mois = array($info1, $info2, $info3);
+			}elseif($trimestre == 3){
+				$info1 = "mensuel_7_".$classeEleve;
+				$info2 = "mensuel_8_".$classeEleve;
+				$mois = array($info1, $info2);
+			}
+			for($x=0;$x<count($mois);$x++){
+				$sql = "SELECT moyenne 
+						FROM $mois[$x] 
+						WHERE eleve='$eleve'";
+				$req = $this->_db->query($sql);
+				$res = $req->fetch(PDO::FETCH_ASSOC);
+				$resultat[] = $res['moyenne'];
+			}
+			return $resultat;
+		}
+
+
+
+		
+
+
+
+
 
 
 
@@ -2453,96 +2754,149 @@
 			$section = $this->getSection($classe);
 			for($i=0;$i<count($listeEleve);$i++){
 				$idEleve = $listeEleve[$i]['id'];
-				$listeMatiere = $this->listeMatiereClasse($classe);
-				for($j=0;$j<count($listeMatiere);$j++){
-					$idMatiere = $listeMatiere[$j]['id_competence'];
-					$codeMatiere = $listeMatiere[$j]['code_competence'];
-					// Cas du Trimestre 1 
-					if($trimestre==1){
-						$table1 = 'mensuel_1_'.$classe;
-						$table2 = 'mensuel_2_'.$classe;
-						$table3 = 'mensuel_3_'.$classe;
-						$champ1 = $codeMatiere.'_1';
-						$champ2 = $codeMatiere.'_2';
-						$champ3 = $codeMatiere.'_3';
-						$sql1 = "SELECT $codeMatiere, moyenne 
-								FROM $table1 
-								WHERE eleve = '$idEleve'";
-						$req1 = $this->_db->query($sql1);
-						$res1 = $req1->fetch(PDO::FETCH_ASSOC);
-						$total1 = $this->setNote($res1[$codeMatiere]);
-						$moyenne1 = $this->setNote($res1['moyenne']);
-						$sql2 = "SELECT $codeMatiere, moyenne 
-								FROM $table2 
-								WHERE eleve = '$idEleve'";
-						$req2 = $this->_db->query($sql2);
-						$res2 = $req2->fetch(PDO::FETCH_ASSOC);
-						$total2 = $this->setNote($res2[$codeMatiere]);
-						$moyenne2 = $this->setNote($res2['moyenne']);
-						$sql3 = "SELECT $codeMatiere, moyenne 
-								FROM $table3 
-								WHERE eleve = '$idEleve'";
-						$req3 = $this->_db->query($sql3);
-						$res3 = $req3->fetch(PDO::FETCH_ASSOC);
-						$total3 = $this->setNote($res3[$codeMatiere]);
-						$moyenne3 = $this->setNote($res3['moyenne']);
-						$update = $this->_db->prepare("UPDATE $nomTable SET 
-													$champ1 = :valeur1,
-													moyenne_1 =:moyenne1,
-													$champ2 = :valeur2,
-													moyenne_2 =:moyenne2,
-													moyenne_3 =:moyenne3,
-													$champ3 = :valeur3
-													WHERE eleve = '$idEleve'");
-						$update->bindValue(':valeur1', $total1);
-						$update->bindValue(':moyenne1', $moyenne1);
-						$update->bindValue(':moyenne2', $moyenne2);
-						$update->bindValue(':moyenne3', $moyenne3);
-						$update->bindValue(':valeur2', $total2);
-						$update->bindValue(':valeur3', $total3);
-						$update->execute();
-
-						$sql = "SELECT $champ1, $champ2, $champ3 
-								FROM $nomTable 
-								WHERE eleve = '$idEleve'";
-						$req = $this->_db->query($sql);
-						$res = $req->fetch(PDO::FETCH_ASSOC);
-
-						$noteEleve = $this->calculMatiereTrimestre($res);
-						$totalGeneral[$idEleve][] = $noteEleve;
-						$champAppr = $codeMatiere.'_appr';
-						$champCote = $codeMatiere.'_cote';
-						$champPondClasse = 'ponderation_classe';
-						$ponderation = $this->getPonderationMatiere($idMatiere, $classe);
-						$ponderationClasse = $this->getPonderationClasse($classe);
-						$cote = $this->getAppreciation($noteEleve,$ponderation);
-						$appr = $this->getLibelleAppreciation($cote, $section);
-						// echo "<p>La note : ".$noteEleve." a pour appréciation ".$appr." et pour cote ".$cote."</p>";
-						$insert = $this->_db->prepare("UPDATE $nomTable SET 
-													$codeMatiere =:valeur,
-													$champCote =:cote, 
-													$champAppr =:appr,
-													$champPondClasse = :pond
-													WHERE eleve = '$idEleve'");
-						$insert->bindValue(':valeur', $noteEleve);
-						$insert->bindValue(':cote', $cote);
-						$insert->bindValue(':appr', $appr);
-						$insert->bindValue(':pond', $ponderationClasse);
-						$insert->execute();
+				// On prend les notes trimestrielles d'un élève ainsi que ses moyennes mensuelles
+				$notes = $this->getNoteTrimestreEleve($idEleve, $trimestre);
+				$moyenne = $this->getMoyenneTrimestreEleve($idEleve, $trimestre);
+				// On scinde les notes en notes mensuelles 
+				for($x=0;$x<count($notes);$x++){
+					$mois = $notes[$x];
+					// On subdivise les notes mensuelles en matières pour calculer 
+					for($j=0;$j<count($mois);$j++){
+						$competence = $mois[$j]['competence'];
+						$note[$idEleve][$competence][] = $this->setNote($mois[$j]['total']);
 					}
-					// Cas du Trimestre 2 
-					elseif($trimestre==2){}
-					// Cas du Trimestre 3 
-					elseif($trimestre==3){}
+				}
+				$listeMatiere = $this->listeMatiereClasse($classe);
+				for($a=0;$a<count($listeMatiere);$a++){
+					$idMatiere = $listeMatiere[$a]['id_competence'];
+					$codeMatiere = $listeMatiere[$a]['code_competence'];
+					$noteTrim = $note[$idEleve][$idMatiere];
+					for($b=0;$b<count($noteTrim);$b++){
+						if(empty($noteTrim[$b])){
+							unset($noteTrim[$b]);
+						}
+					}
+					$sommeTrimestrielle = array_sum($noteTrim);
+					$noteTrimestrielle = $sommeTrimestrielle / count($noteTrim);
+					$ponderationMatiere = $this->getPonderationMatiere($idMatiere, $classe);
+					$cote = $this->getAppreciation($noteTrimestrielle, $ponderationMatiere);
+					$appr = $this->getLibelleAppreciation($cote, $section);
+					if($trimestre==1){
+						$champ1 = $codeMatiere."_1";
+						$champ2 = $codeMatiere."_2";
+						$champ3 = $codeMatiere."_3";
+						$champMoy1 = 'moyenne_1';
+						$champMoy2 = 'moyenne_2';
+						$champMoy3 = 'moyenne_3';
+						$champ = $codeMatiere;
+						$champCote = $codeMatiere."_cote";
+						$champAppr = $codeMatiere."_appr";
+
+						$note1 = $this->setNote($noteTrim[0]);
+						$note2 = $this->setNote($noteTrim[1]);
+						$note3 = $this->setNote($noteTrim[2]);
+						$moy1 = $this->setNote($moyenne[0]);
+						$moy2 = $this->setNote($moyenne[1]);
+						$moy3 = $this->setNote($moyenne[2]);
+
+						$update = $this->_db->prepare("UPDATE $nomTable SET 
+												$champ =:note,
+												$champ1 =:note1,
+												$champ2 =:note2,
+												$champ3 =:note3,
+												$champMoy1 =:moy1,
+												$champMoy2 =:moy2,
+												$champMoy3 =:moy3,
+												$champCote =:cote,
+												$champAppr =:appr
+												WHERE eleve =:eleve");
+						$update->execute(array(
+								"note"=>$noteTrimestrielle,
+								"note1"=>$note1,
+								"note2"=>$note2,
+								"note3"=>$note3,
+								"moy1"=>$moy1,
+								"moy2"=>$moy2,
+								"moy3"=>$moy3,
+								"cote"=>$cote,
+								"appr"=>$appr,
+								"eleve"=>$idEleve
+						));
+					}
+					elseif($trimestre==2){
+						$champ1 = $codeMatiere."_4";
+						$champ2 = $codeMatiere."_5";
+						$champ3 = $codeMatiere."_6";
+						$champMoy1 = 'moyenne_4';
+						$champMoy2 = 'moyenne_5';
+						$champMoy3 = 'moyenne_6';
+						$champ = $codeMatiere;
+						$champCote = $codeMatiere."_cote";
+						$champAppr = $codeMatiere."_appr";
+
+						$note1 = $this->setNote($noteTrim[0]);
+						$note2 = $this->setNote($noteTrim[1]);
+						$note3 = $this->setNote($noteTrim[2]);
+						$moy1 = $this->setNote($moyenne[0]);
+						$moy2 = $this->setNote($moyenne[1]);
+						$moy3 = $this->setNote($moyenne[2]);
+
+						$update = $this->_db->prepare("UPDATE $nomTable SET 
+												$champ =:note,
+												$champ1 =:note1,
+												$champ2 =:note2,
+												$champ3 =:note3,
+												$champMoy1 =:moy1,
+												$champMoy2 =:moy2,
+												$champMoy3 =:moy3,
+												$champCote =:cote,
+												$champAppr =:appr
+												WHERE eleve =:eleve");
+						$update->execute(array(
+								"note"=>$noteTrimestrielle,
+								"note1"=>$note1,
+								"note2"=>$note2,
+								"note3"=>$note3,
+								"moy1"=>$moy1,
+								"moy2"=>$moy2,
+								"moy3"=>$moy3,
+								"cote"=>$cote,
+								"appr"=>$appr,
+								"eleve"=>$idEleve
+						));
+					}elseif($trimestre==3){}
+				}
+			}
+			
+			for($w=0;$w<count($listeEleve);$w++){
+				$idEleve = $listeEleve[$w]['id'];
+				$listeMatiere = $this->listeMatiereClasse($classe);
+				for($x=0;$x<count($listeMatiere);$x++){
+					// On totalise d'abord les points des élèves 
+					$idMatiere = $listeMatiere[$x]['id_competence'];
+					$codeMatiere = strtolower($listeMatiere[$x]['code_competence']);
+					$sql = "SELECT $codeMatiere 
+							FROM $nomTable
+							WHERE eleve = '$idEleve'";
+					$req = $this->_db->query($sql);
+					$res = $req->fetch(PDO::FETCH_ASSOC);
+					$total[$x] = $res[$codeMatiere];
 					
 				}
-				$totalPoint = array_sum($totalGeneral[$idEleve]);
-				// echo $totalPoint.'<br />';
-				$requete = $this->_db->prepare("UPDATE $nomTable SET
-												total = :total
-												WHERE eleve = '$idEleve'");
-				$requete->execute(array('total'=>$totalPoint));
+				// Ensuite on totalise les points définis dans la classe
+				$totalPoint = array_sum($total);
+				$ponderationClasse = $this->getPonderationClasse($classe);
+				$update = $this->_db->prepare("UPDATE $nomTable SET 
+												total =:total,
+												ponderation_classe =:ponderation
+												WHERE eleve =:eleve");
+				$update->execute(array(
+						"total"=>$totalPoint,
+						"ponderation"=>$ponderationClasse,
+						"eleve"=>$idEleve
+				));
 			}
+
 		}
 
 
@@ -2639,37 +2993,7 @@
 		// Pour les appreciations et les cotes 
 		private function calculNoteMensuel($classe, $mois){
 			$nomTable = 'mensuel_'.$mois.'_'.$classe;
-			$as = $this->getCurrentYear();
-			$section = $this->getSection($classe);
-			// On sort le total des points définis dans la classe 
-			$sql = "SELECT * FROM $nomTable";
-			$req = $this->_db->query($sql);
-			$res = $req->fetchAll(PDO::FETCH_ASSOC);
-			for($i=0;$i<count($res);$i++){
-				$id = $res[$i]['id'];
-				$noteEleve = $res[$i]['total'];
-				$ponderationEleve = $res[$i]['ponderation'];
-				$ponderationClasse = $res[$i]['ponderation_classe'];
-				$classement = $ponderationClasse * 50 / 100;
-				if($ponderationEleve>=$classement){
-					$totalEvaluation = $ponderationEleve;
-					$cote = $this->getAppreciation($noteEleve, $totalEvaluation);
-					$appreciation = $this->getLibelleAppreciation($cote, $section);
-					$moyenne = $noteEleve * 20 / $totalEvaluation;
-				}else{
-					$cote = NULL;
-					$appreciation = NULL;
-					$moyenne = NULL;
-				}
-				$requete = $this->_db->prepare("UPDATE $nomTable SET 
-												cote = :cote,
-												appr = :appreciation,
-												moyenne = :moyenne
-												WHERE id = '$id'");
-				$requete->execute(array('cote'=>$cote,
-										'appreciation'=>$appreciation,
-										'moyenne'=>$moyenne));
-			}
+			
 			// On insère dans la table bull_mensuel
 			$supprime = $this->_db->prepare("DELETE FROM bull_mensuel 
 										WHERE classe = :classe 
@@ -3034,6 +3358,7 @@
 			$this->_trimestre = $this->setUserId($trimestre);
 			$this->_section = $this->getSection($this->_classe);
 			$this->_as = $this->getCurrentYear();
+			$infoClasse = $this->getClasse($this->_classe);
 			// On crée la table qui va recevoir les données 
 			$this->prepaTableTrimestre($this->_classe, $this->_trimestre);
 			
@@ -3047,10 +3372,177 @@
 			$this->calculNoteTrimestre($this->_classe, $this->_trimestre);
 			
 			// On informe que tout s'est bien passé 
-			$_SESSION['message'] = 'Notes traitées. Imprimez le bulletin Trimestriel';
+			$_SESSION['message'] = 'Notes de '.$infoClasse['libelle_classe'].' traitées ';
+			$_SESSION['message'].= ' pour le trimestre '.$this->_trimestre.'. Imprimez le bulletin.';
 			header('Location:'.$source);
 		}
-		
+
+
+
+
+
+
+
+
+		public function viewNoteMatiere($classe, $periode, $matiere){
+			$this->_classe = $this->setUserId($classe);
+			$this->_periode = $this->setUserId($periode);
+			$this->_matiere = $this->setUserId($matiere);
+
+			$sql = "SELECT eleve, note.classe as classe, periode, competence, oral, ecrit, prat, se, total,
+							nom_complet, note.id as idNote
+					FROM note, eleve 
+					WHERE note.classe = '$this->_classe'
+						AND periode = '$this->_periode' 
+						AND competence = '$this->_matiere' 
+						AND eleve.id = note.eleve
+						";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			return $res;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/***
+		 * Cette fnction est réservée aux mises à jour directes sur la Base de 
+		 * Données.
+		 */
+		public function update(){
+			/*
+			// J'ajoute les notes des élèves par classe 
+			$listeClasse = $this->viewClasseSection('actif','fr');
+			// echo '<pre>'; print_r($listeClasse); echo '</pre>';
+			for($i=0;$i<count($listeClasse);$i++){
+				$idClasse = $listeClasse[$i]['id'];
+				$listeEleve = $this->listeEleve($idClasse, 'non_supprime', '');
+				for($j=0;$j<count($listeEleve);$j++){
+					$idEleve = $listeEleve[$j]['id'];
+					// echo "<p>".$idEleve." fait la classe de ".$idClasse.".</p>";
+					$listeMatiere = $this->listeMatiereClasse($idClasse);
+					for($k=0;$k<count($listeMatiere);$k++){
+						$idMatiere = $listeMatiere[$k]['id_competence'];
+						// J'insère les matières pour un mois 
+						$insertion = $this->_db->prepare("INSERT INTO note 
+													SET 
+													eleve =:eleve,
+													classe =:classe,
+													periode =:periode, 
+													competence =:competence");
+						$insertion->bindValue(':eleve', $idEleve);
+						$insertion->bindValue(':classe', $idClasse);
+						$insertion->bindValue(':periode', 3);
+						$insertion->bindValue(':competence',$idMatiere);
+						$insertion->execute();
+					}
+				} 
+			}
+
+			*/
+
+			/** J'ajoute les notes des élèves par classe STEP 2
+			 * Voici les id des classes : 
+			 * Class 1 => 11
+			 * Class 2 => 12
+			 * Class 3 => 13
+			 * Class 4 => 14
+			 * Class 5 => 1
+			 * Class 6 => 15
+			 * *************
+			 * SIL => 2
+			 * CP => 3
+			 * CE1 A => 4
+			 * CE1 B => 5
+			 * CE2 A => 6
+			 * CE2 B => 7
+			 * CM1 A => 8
+			 * CM1 B => 9
+			 * CM2 => 10
+			 */
+			/*$idClasse = 10;
+			$idPeriode = 3;
+			$listeEleve = $this->listeEleve($idClasse,'non_supprime','');*/
+			// echo '<pre>'; print_r($listeEleve); echo '</pre>';
+			/*for($i=0;$i<count($listeEleve);$i++){
+				$idEleve = $listeEleve[$i]['id'];
+				$listeMatiere = $this->listeMatiereClasse($idClasse);
+				for($x=0;$x<count($listeMatiere);$x++){
+					$idCompetence = $listeMatiere[$x]['id_competence'];
+					$sql_search = "SELECT notes.id as idNote, eleve, classe, matiere, sous_matiere, 
+											periode, note, id_classe, id_competence, id_sous_competence,
+											nb_point, libelle_competence_fr, libelle_sous_competence_fr,
+											code_sous_competence
+									FROM notes, matiere, liste_competence, liste_sous_competence 
+									WHERE eleve = '$idEleve'
+										AND periode = '$idPeriode'
+										AND matiere = '$idCompetence'
+										AND notes.sous_matiere = matiere.id
+										AND id_competence = liste_competence.id
+										AND id_sous_competence = liste_sous_competence.id";
+					$req_search = $this->_db->query($sql_search);
+					$res_search = $req_search->fetchAll(PDO::FETCH_ASSOC);
+					// echo '<pre>'; print_r($res_search); echo '</pre>';
+					for($j=0;$j<count($res_search);$j++){
+						$champ[$j] = $res_search[$j]['code_sous_competence'];
+						$noteObtenue[$j] = $this->setNote($res_search[$j]['note']);
+						$update = $this->_db->prepare("UPDATE note SET 
+													$champ[$j] =:note
+													WHERE eleve =:eleve
+														AND classe=:classe
+														AND periode=:periode
+														AND competence =:competence");
+						$update->bindValue(':note', $noteObtenue[$j]);
+						$update->bindValue(':eleve', $idEleve);
+						$update->bindValue(':classe', $idClasse);
+						$update->bindValue(':periode', $idPeriode);
+						$update->bindValue(':competence', $idCompetence);
+						$update->execute();
+						// echo "<h1>".$champ[$j]." vaut : ".$noteObtenue[$j]."</h1>";
+					}
+				}
+				// echo '<pre>'; print_r($listeMatiere); echo '</pre>';
+			}*/
+
+			// On va sommer toutes les notes de la Séquence 1 stockées dans la table note 
+			/*$sql = "SELECT * 
+					FROM note 
+					WHERE classe='15' 
+						";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			// echo '<pre>'; print_r($res); echo '</pre>';
+			for($x=0;$x<count($res);$x++){
+				$total['oral'] = $res[$x]['oral'];
+				$total['ecrit'] = $res[$x]['ecrit'];
+				$total['prat'] = $res[$x]['prat'];
+				$total['se'] = $res[$x]['se'];
+				$id = $res[$x]['id'];
+				$noteTotal = $this->setNote(array_sum($total));
+				// echo '<p> '.$id.' a le total de '.$noteTotal.'.</p>';
+				$update = $this->_db->prepare("UPDATE note SET 
+												total =:total
+												WHERE id =:id");
+				$update->bindValue(':total', $noteTotal);
+				$update->bindValue(':id', $id);
+				$update->execute();
+			}*/
+
+		}
 		
 		
 	}

@@ -250,14 +250,19 @@
 		
 		elseif($_SESSION['print']=='bulletinMensuel'){
 			$classe = $_SESSION['classe'];
+			$pdf->bulletinMensuel($classe);
+			$fileName = 'bulletin_mensuel_';
+			$fileName .= $classe['infoClasse']['libelle_classe'];
+			$fileName .= '.pdf';
+			$pdf->Output($fileName, 'I');
 			
 			// La section Anglophone 
 			if($classe['section']=='en'){
 				// Un bulletin par élève
-				$eleve = $classe['eleve'];
-				$infoClasse = $classe['infoClasse'];
-				$mois = $classe['moisCourant'];
-				for($i=0;$i<count($eleve);$i++){
+				// $eleve = $classe['eleve'];
+				// $infoClasse = $classe['infoClasse'];
+				// $mois = $classe['moisCourant'];
+				/*for($i=0;$i<count($eleve);$i++){
 					$pdf->addPage();
 					$pdf->Entete();
 					$idEleve = $eleve[$i]['id'];
@@ -267,38 +272,38 @@
 					}else{
 						$image = $photo;
 					}
-					// ENTÊTE DU BULLETIN 
-					$pdf->SetFont('Times','',13);
-					$pdf->Image($image, 180, 65, 15);
-					$pdf->Text(20,75,'Level: ');
-					$pdf->Text(60,75,'Class : ');
-					$pdf->Text(100,75,'Month : ');
-					$pdf->Text(20,80,"Pupil Name : ");
-					$pdf->Text(20,85,'Teacher: ');
-					$pdf->SetFont('Times','B',13);
-					$pdf->Text(35,75,$infoClasse['niveau_classe']);
-					$pdf->Text(75,75,$pdf->convert(strtoupper($infoClasse['libelle_classe'])));
-					$pdf->Text(115,75, $pdf->convert(strtoupper($mois['code_periode_en'])));
-					$pdf->Text(50,80,stripslashes($eleve[$i]['nom_complet']));
-					$pdf->SetFont('Times','BI',12);
-					$pdf->Text(50,85, $classe['enseignant']['nom']);
-					$pdf->Ln(30);
+					// // ENTÊTE DU BULLETIN 
+					// $pdf->SetFont('Times','',13);
+					// $pdf->Image($image, 180, 65, 15);
+					// $pdf->Text(20,75,'Level: ');
+					// $pdf->Text(60,75,'Class : ');
+					// $pdf->Text(100,75,'Month : ');
+					// $pdf->Text(20,80,"Pupil Name : ");
+					// $pdf->Text(20,85,'Teacher: ');
+					// $pdf->SetFont('Times','B',13);
+					// $pdf->Text(35,75,$infoClasse['niveau_classe']);
+					// $pdf->Text(75,75,$pdf->convert(strtoupper($infoClasse['libelle_classe'])));
+					// $pdf->Text(115,75, $pdf->convert(strtoupper($mois['code_periode_en'])));
+					// $pdf->Text(50,80,stripslashes($eleve[$i]['nom_complet']));
+					// $pdf->SetFont('Times','BI',12);
+					// $pdf->Text(50,85, $classe['enseignant']['nom']);
+					// $pdf->Ln(30);
 
 					
-					// Entête du Tableau 
-					$pdf->setFont('Times', 'B', 8);
-					$pdf->Cell(75, 5, strtoupper($pdf->convert('Matiere')), 1, 0, 'C', true);
-					$pdf->Cell(10, 5, 'PTS', 1, 0, 'C', true);
-					for($a=0;$a<count($classe['listeSousMatiereAll']); $a++){
-						$pdf->setFont('Times', 'B', 6);
-						$cle = 'libelle_sous_competence_'.$classe['section'];
-						$sousMatiere = $classe['listeSousMatiereAll'][$a][$cle];
-						$pdf->Cell(17, 5, strtoupper($sousMatiere), 1, 0, 'C', true);
-					}
-					$pdf->Cell(13, 5, strtoupper('Total'), 1, 0, 'C', true);
-					$pdf->Cell(13, 5, strtoupper('Grade'), 1, 0, 'C', true);
-					$pdf->Cell(13, 5, strtoupper('Appr'), 1, 0, 'C', true);
-					$pdf->Ln(5);			
+					// // Entête du Tableau 
+					// $pdf->setFont('Times', 'B', 8);
+					// $pdf->Cell(75, 5, strtoupper($pdf->convert('Matiere')), 1, 0, 'C', true);
+					// $pdf->Cell(10, 5, 'PTS', 1, 0, 'C', true);
+					// for($a=0;$a<count($classe['listeSousMatiereAll']); $a++){
+					// 	$pdf->setFont('Times', 'B', 6);
+					// 	$cle = 'libelle_sous_competence_'.$classe['section'];
+					// 	$sousMatiere = $classe['listeSousMatiereAll'][$a][$cle];
+					// 	$pdf->Cell(17, 5, strtoupper($sousMatiere), 1, 0, 'C', true);
+					// }
+					// $pdf->Cell(13, 5, strtoupper('Total'), 1, 0, 'C', true);
+					// $pdf->Cell(13, 5, strtoupper('Grade'), 1, 0, 'C', true);
+					// $pdf->Cell(13, 5, strtoupper('Appr'), 1, 0, 'C', true);
+					// $pdf->Ln(5);			
 					
 					// GESTION DES MATIERES 
 					$listeMatiere = $classe['listeMatiere'];
@@ -339,11 +344,11 @@
 					$totalNote = $classe['totalNote'][$i]['total'];
 					$totalCote = $classe['totalNote'][$i]['cote'];
 					$totalAppr = $classe['totalNote'][$i]['appr'];
-					$pdf->Cell(153, 5, 'TOTAL / '.$classe['ponderation'], 1, 0, 'C', true);
-					$pdf->Cell(13, 5, $totalNote, 1, 0, 'C', true);
-					$pdf->Cell(13, 5, $totalCote, 1, 0, 'C', true);
-					$pdf->Cell(13, 5, $totalAppr, 1, 0, 'C', true);
-					$pdf->Ln(15);
+					// $pdf->Cell(153, 5, 'TOTAL / '.$classe['ponderation'], 1, 0, 'C', true);
+					// $pdf->Cell(13, 5, $totalNote, 1, 0, 'C', true);
+					// $pdf->Cell(13, 5, $totalCote, 1, 0, 'C', true);
+					// $pdf->Cell(13, 5, $totalAppr, 1, 0, 'C', true);
+					// $pdf->Ln(15);
 					$moyenne = $classe['totalNote'][$i]['moyenne'];
 					if($classe['totalNote'][$i]['rank']==1){
 						$rank = $classe['totalNote'][$i]['rank'].'st';
@@ -358,28 +363,28 @@
 					$rang = $rank.' / '.$classe['totalNote'][$i]['evalues'];
 					$moyenneGenerale = $classe['totalNote'][$i]['moy_gen'];
 					$evalues = $classe['totalNote'][$i]['evalues'];
-					$pdf->Cell(47, 5, 'General Average : '.$moyenneGenerale, 1, 0, 'C');
-					$pdf->Cell(48, 5, utf8_decode('Evaluated : ').$evalues, 1, 0, 'C');
-					$pdf->Cell(50, 5, 'Average : '.$moyenneEleve, 1, 0, 'C', true);
-					$pdf->Cell(50, 5, 'Rank : '.$rang, 1, 0, 'C', true);
-					$pdf->SetFont('Times','BI',9);
-					$pdf->Ln(5);
-					$pdf->Cell(195, 5, strtoupper('General Observation and Remarks'), 1, 1, 'C', true);
-					$pdf->Cell(65, 5, strtoupper('Monthly Observation'), 1, 0, 'C');
-					$pdf->Cell(45, 5, strtoupper('Teacher signature'), 1, 0, 'C');
-					$pdf->Cell(50, 5, strtoupper('Administration signature'), 1, 0, 'C');
-					$pdf->Cell(35, 5, strtoupper('Parent signature'), 1, 0, 'C');
-					$pdf->Ln(5);
-					$pdf->Cell(65, 20, '', 1, 0, 'C');
-					$pdf->Cell(45, 20, '', 1, 0, 'C');
-					$pdf->Cell(50, 20, '', 1, 0, 'C');
-					$pdf->Cell(35, 20, '', 1, 0, 'C');
-					$pdf->Ln(25);
-					$faitA = 'Done at '.ucwords($_SESSION['information']['ville']).' on the '.DATE('d / m / Y');
-					$pdf->Cell(180, 5, $faitA, 0,0,'R');
-					$pdf->Ln(3);
-					$pdf->Cell(180, 5, 'The Director', 0,0,'R');
-				}
+					// $pdf->Cell(47, 5, 'General Average : '.$moyenneGenerale, 1, 0, 'C');
+					// $pdf->Cell(48, 5, utf8_decode('Evaluated : ').$evalues, 1, 0, 'C');
+					// $pdf->Cell(50, 5, 'Average : '.$moyenneEleve, 1, 0, 'C', true);
+					// $pdf->Cell(50, 5, 'Rank : '.$rang, 1, 0, 'C', true);
+					// $pdf->SetFont('Times','BI',9);
+					// $pdf->Ln(5);
+					// $pdf->Cell(195, 5, strtoupper('General Observation and Remarks'), 1, 1, 'C', true);
+					// $pdf->Cell(65, 5, strtoupper('Monthly Observation'), 1, 0, 'C');
+					// $pdf->Cell(45, 5, strtoupper('Teacher signature'), 1, 0, 'C');
+					// $pdf->Cell(50, 5, strtoupper('Administration signature'), 1, 0, 'C');
+					// $pdf->Cell(35, 5, strtoupper('Parent signature'), 1, 0, 'C');
+					// $pdf->Ln(5);
+					// $pdf->Cell(65, 20, '', 1, 0, 'C');
+					// $pdf->Cell(45, 20, '', 1, 0, 'C');
+					// $pdf->Cell(50, 20, '', 1, 0, 'C');
+					// $pdf->Cell(35, 20, '', 1, 0, 'C');
+					// $pdf->Ln(25);
+					// $faitA = 'Done at '.ucwords($_SESSION['information']['ville']).' on the '.DATE('d / m / Y');
+					// $pdf->Cell(180, 5, $faitA, 0,0,'R');
+					// $pdf->Ln(3);
+					// $pdf->Cell(180, 5, 'The Director', 0,0,'R');
+				}*/
 				
 				$fileName='Mensual_Report_Marks_';
 				$fileName .= str_replace(' ', '_', $infoClasse['libelle_classe']);
@@ -395,7 +400,7 @@
 				$eleve = $classe['eleve'];
 				$infoClasse = $classe['infoClasse'];
 				$mois = $classe['moisCourant'];
-				for($i=0;$i<count($eleve);$i++){
+				/*for($i=0;$i<count($eleve);$i++){
 					$pdf->addPage();
 					$pdf->Entete();
 					$idEleve = $eleve[$i]['id'];
@@ -516,7 +521,7 @@
 					$pdf->Cell(180, 5, $faitA, 0,0,'R');
 					$pdf->Ln(3);
 					$pdf->Cell(180, 5, 'La Directrice ', 0,0,'R');
-				}
+				}*/
 				
 				$fileName='Bulletin_mensuel_';
 				$fileName .= str_replace(' ', '_', $infoClasse['libelle_classe']);

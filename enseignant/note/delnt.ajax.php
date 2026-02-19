@@ -23,11 +23,11 @@
 				value='<?php echo $_SESSION['user']['classeTenue']['id']; ?>' />
 			<input 
 				type='submit' 
-				name='deleteNote' 
+				name='supprimerNote' 
 				value='Oui' /> |
 			<input 
 				type='submit' 
-				name='deleteNote' 
+				name='supprimerNote' 
 				value='Non' />
 			</h3>
 			<table border='1' width='100%'>

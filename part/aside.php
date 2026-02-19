@@ -23,7 +23,7 @@ $menu['cellule']['stat']['libelle'] = array('statistiques mensuelles',
 $menu['cellule']['stat']['lien'] = array('mensuel', 'trimestre', 'annuel');
 
 $menu['cellule']['eleve']['libelle'] = array('ajouter', 'rechercher');
-$menu['cellule']['eleve']['lien'] = array('ajouter', 'rechercher');
+$menu['cellule']['eleve']['lien'] = array('ajouter', 'find');
 
 /*$menu['cellule']['enseignant']['libelle'] = array('créer un enseignant',
 													'liste des enseignants',
@@ -73,8 +73,9 @@ $menu['administrateur']['bd']['lien'] = array('as','appr','cls','per','usert');
 
 $menu['enseignant']['note']['libelle'] = array('Insérer des Notes', 
 												'Modifier des Notes',
-												'Consulter ses notes');
-$menu['enseignant']['note']['lien'] = array('addnt','updnt','viewnt');
+												'Consulter ses notes',
+											'révendication des notes');
+$menu['enseignant']['note']['lien'] = array('addnt','updnt','viewnt', 'revendic');
 
 
 $menu['enseignant']['stat']['libelle'] = array('Statistiques Mensuelles', 

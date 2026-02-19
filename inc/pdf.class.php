@@ -300,6 +300,165 @@
 				$this->Cell(180, 5, $titre[$section], 0,0,'R');
 			}
 		}
+
+
+
+
+
+
+
+
+
+		public function bulletinMensuel($classe){
+			$eleve = $classe['eleve'];
+			$section = $classe['section'];
+			$infoClasse = $classe['infoClasse'];
+			$mois = $classe['moisCourant'];
+			$note = $classe['note'];
+			for($i=0;$i<count($eleve);$i++){
+				$this->addPage();
+				$this->Entete();
+				$idEleve = $eleve[$i]['id'];
+				$photo = $eleve[$i]['photo'];
+				$totalNote = $classe['totalNote'];
+				if($photo=='images/student/' or $photo==''){
+					$image = 'images/student/no_name.png';
+				}else{
+					$image = $photo;
+				}
+				// ENTÊTE DU BULLETIN 
+				$libNiveau['fr'] = 'Niveau :';
+				$libClass['fr'] = 'Classe : ';
+				$month['fr'] = 'Mois : ';
+				$libEleve['fr'] = "Nom de l'eleve : ";
+				$libEns['fr'] = "Enseignant : ";
+				$libMatiere['fr'] = 'Matière';
+				$libPoint['fr'] = 'pts';
+				$libCote['fr'] = 'Côte';
+				/******************************** */
+				$libNiveau['en'] = 'Level: ';
+				$libClass['en'] = 'Class : ';
+				$month['en'] = 'Month : ';
+				$libEleve['en'] = "Pupil Name : ";
+				$libEns['en'] = "Teacher : ";
+				$libMatiere['en'] = 'Subject';
+				$libPoint['en'] = 'mks';
+				$libCote['en'] = 'grade';
+				/******************************* */
+				$this->SetFont('Times','',13);
+				$this->Image($image, 180, 65, 15);
+				$this->Text(20,75,$libNiveau[$section]);
+				$this->Text(60,75,$libClass[$section]);
+				$this->Text(100,75,$month[$section]);
+				$this->Text(20,80,$libEleve[$section]);
+				$this->Text(20,85,$libEns[$section]);
+				/************************************ */
+				$this->SetFont('Times','B',13);
+				$this->Text(35,75,$infoClasse['niveau_classe']);
+				$this->Text(75,75,$this->convert(strtoupper($infoClasse['libelle_classe'])));
+				$this->Text(115,75, $this->convert(strtoupper($mois['id'])));
+				$this->Text(50,80,stripslashes($eleve[$i]['nom_complet']));
+				$this->SetFont('Times','BI',12);
+				$this->Text(50,85, $classe['enseignant']['nom']);
+				$this->Ln(30);
+				/**************************************** */
+				// Entête du Tableau 
+				$this->setFont('Times', 'B', 8);
+				$this->Cell(75, 5, strtoupper($this->convert('Matiere')), 1, 0, 'C', true);
+				$this->Cell(10, 5, 'PTS', 1, 0, 'C', true);
+				$listeSousMatiere = $classe['listeSousMatiere'][$section];
+				for($a=0;$a<count($listeSousMatiere); $a++){
+					$this->setFont('Times', 'B', 6);
+					$this->Cell(17, 5, strtoupper($listeSousMatiere[$a]), 1, 0, 'C', true);
+				}
+				$this->Cell(13, 5, strtoupper('Total'), 1, 0, 'C', true);
+				$this->Cell(13, 5, strtoupper('Grade'), 1, 0, 'C', true);
+				$this->Cell(13, 5, strtoupper('Appr'), 1, 0, 'C', true);
+				$this->Ln(5);
+				/****************************************
+				 * **************************************
+				 */
+
+				// GESTION DES MATIERES
+				$listeMatiere = $classe['listeMatiere'];
+				for($b=0;$b<count($listeMatiere);$b++){
+					$ponderationMatiere = $classe['ponderationMatiere'];
+					$this->SetFont('Times','',8);
+					$cleCompetence = 'libelle_competence_'.$section;
+					$codeMatiere = $listeMatiere[$b]['code_competence'];
+					$idMatiere = $listeMatiere[$b]['id_competence'];
+					$libelleMatiere = strtoupper($listeMatiere[$b][$cleCompetence]);
+					$this->Cell(75, 5, substr($libelleMatiere,0,46), 1, 0, 'L');
+					$this->Cell(10, 5, $ponderationMatiere[$b], 1, 0, 'C');
+					$this->Cell(17, 5, $note[$i][$b]['oral'], 1, 0, 'C');
+					$this->Cell(17, 5, $note[$i][$b]['ecrit'], 1, 0, 'C');
+					$this->Cell(17, 5, $note[$i][$b]['prat'], 1, 0, 'C');
+					$this->Cell(17, 5, $note[$i][$b]['se'], 1, 0, 'C');
+					$this->SetFont('Times','B',8);
+					$this->Cell(13, 5, $note[$i][$b]['total'], 1, 0, 'C', true);
+					$this->Cell(13, 5, $note[$i][$b]['cote'], 1, 0, 'C', true);
+					$this->Cell(13, 5, $note[$i][$b]['appr'], 1, 0, 'C',true);
+					$this->Ln(5);
+				}
+				$this->SetFont('Times', 'B', 11);
+				// 	$totalNote = $classe['totalNote'][$i]['total'];
+				// $totalCote = $classe['totalNote'][$i]['cote'];
+				// $totalAppr = $classe['totalNote'][$i]['appr'];
+				$this->Cell(153, 5, 'TOTAL / '.$totalNote[$i]['ponderation'], 1, 0, 'C', true);
+				$this->Cell(13, 5, $totalNote[$i]['total'], 1, 0, 'C', true);
+				$this->Cell(13, 5, $totalNote[$i]['cote'], 1, 0, 'C', true);
+				$this->Cell(13, 5, $totalNote[$i]['appr'], 1, 0, 'C', true);
+				$this->Ln(15);
+				/**************************************************** */
+				$libMoyGen['fr'] = 'Moy. Générale : ';
+				$libEval['fr'] = 'Effectif Evalué : ';
+				$libMoy['fr'] = 'Moyenne :';
+				$libRang['fr'] = 'Rang :';
+				$libObservGen['fr'] = 'observations generales et remarques';
+				$libObservMens['fr'] = 'observation mensuelle';
+				$libTeacherSign['fr'] = 'signature enseignant';
+				$libAdminSign['fr'] = 'signature administration';
+				$libParentSign['fr'] = 'signature parent';
+				$libFaitA['fr'] = "Fait a ".$_SESSION['information']['ville'];
+				$libFaitA['fr'] .= " le ".DATE('d / m / Y');
+				$libDirecteur['fr'] = 'La Directrice';
+				/*************************************************** */
+				$libMoyGen['en'] = 'General Average : ';
+				$libEval['en'] = 'Evaluated : ';
+				$libMoy['en'] = 'Average :';
+				$libRang['en'] = 'Rank :';
+				$libObservGen['en'] = 'General Observation and Remarks';
+				$libObservMens['en'] = 'Monthly Observation';
+				$libTeacherSign['en'] = 'Teacher signature';
+				$libAdminSign['en'] = 'Administration signature';
+				$libParentSign['en'] = 'Parent signature';
+				$libFaitA['en'] = "Done at ".$_SESSION['information']['ville'];
+				$libFaitA['en'] .= " on the ".DATE('d / m / Y');
+				$libDirecteur['en'] = 'The Director';
+				/***************************************************** */
+				$lignClassement = $libRang[$section].' '.$totalNote[$i]['rank'].' / '.$totalNote[$i]['evalues'];
+				$this->Cell(47, 5, utf8_decode($libMoyGen[$section]).' '.$totalNote[$i]['moy_gen'], 1, 0, 'C');
+				$this->Cell(48, 5, utf8_decode($libEval[$section]).' '.$totalNote[$i]['evalues'], 1, 0, 'C');
+				$this->Cell(50, 5, utf8_decode($libMoy[$section]).' '.$totalNote[$i]['moyenne'], 1, 0, 'C', true);
+				$this->Cell(50, 5, utf8_decode($lignClassement), 1, 0, 'C', true);
+				$this->SetFont('Times','BI',9);
+				$this->Ln(5);
+				$this->Cell(195, 5, strtoupper($libObservGen[$section]), 1, 1, 'C', true);
+				$this->Cell(65, 5, strtoupper($libObservMens[$section]), 1, 0, 'C');
+				$this->Cell(45, 5, strtoupper($libTeacherSign[$section]), 1, 0, 'C');
+				$this->Cell(50, 5, strtoupper($libAdminSign[$section]), 1, 0, 'C');
+				$this->Cell(35, 5, strtoupper($libParentSign[$section]), 1, 0, 'C');
+				$this->Ln(5);
+				$this->Cell(65, 20, '', 1, 0, 'C');
+				$this->Cell(45, 20, '', 1, 0, 'C');
+				$this->Cell(50, 20, '', 1, 0, 'C');
+				$this->Cell(35, 20, '', 1, 0, 'C');
+				$this->Ln(25);
+				$this->Cell(180, 5, utf8_decode($libFaitA[$section]), 0,0,'R');
+				$this->Ln(3);
+				$this->Cell(180, 5, utf8_decode($libDirecteur[$section]), 0,0,'R');
+			}
+		}
 		
 		
 	}

@@ -27,4 +27,5 @@
 			</h3></li>
 		</ul>
 	</nav>
+	<?php /*echo '<pre>'; print_r($_SESSION['user']); echo '</pre>';*/ ?>
 </header>

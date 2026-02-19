@@ -157,6 +157,19 @@
 			$source = str_replace($var2,'',$source);
 			$config->updateEleve($source, $eleve);
 		}
+
+
+
+
+
+
+
+		// On met à jour un élève 
+		if(isset($_POST['updClasseEleve'])){
+			// echo '<pre>'; print_r($_POST); echo '</pre>';
+			$eleve = $_POST;
+			$config->changeClasseEleve($source, $eleve);
+		}
 		
 		
 		
@@ -406,7 +419,7 @@
 					}else{
 						$bull = $config->configBulletinMensuel($classe, $mois);
 						
-						// echo '<pre>'; print_r($bull['totalNote']); echo '</pre>';
+						// echo '<pre>'; print_r($bull); echo '</pre>';
 						$_SESSION['print'] = $print;
 						$_SESSION['classe'] = $bull;
 						header('Location:print_pdf.php');
@@ -530,6 +543,16 @@
 			$config->modifierNote($source, $notes);
 		}
 		
+
+
+
+
+		// On a lancé le processus de révendication pour un élève
+		if(isset($_POST['updateNoteRevendic'])){
+			// echo '<pre>'; print_r($_POST); echo '</pre>';
+			$note = $_POST;
+			$config->modifierNoteRevendic($source, $note);
+		}
 		
 		
 		
@@ -620,7 +643,7 @@
 					/**
 					 * On fait le traitement selon le trimestre. Pour ce faire, on vérifie 
 					 * que les traitements ont été faits dans la table appropriée. Sinon, 
-					 * on refuse de la ncer le traitement.
+					 * on refuse de lancer le traitement.
 					 */
 					if($trimestre==1){
 						$verif = $config->verifTrimUn($classe);

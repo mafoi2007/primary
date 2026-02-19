@@ -11,6 +11,7 @@
 			<th>Option 1</th>
 			<th>Option 2</th>
 			<th>Option 3</th>
+			<th>Option 4</th>
 		</tr>
 		<?php 
 		// echo sha1('eleve');
@@ -29,6 +30,7 @@
 					$pageUpd = 'eleve.php?action=upd&amp;id='.$reponse[$i]['id'];
 					$pageDel = 'eleve.php?action=delete&amp;id='.$reponse[$i]['id'];
 					$pageRest = 'eleve.php?action=restaure&amp;id='.$reponse[$i]['id'];
+					$pageChange = 'eleve.php?action=changeClasse&amp;id='.$reponse[$i]['id'];
 					echo "<tr>
 						<td>".$a."</td>
 						<td>".$nomEleve."</td>
@@ -39,6 +41,7 @@
 						}elseif($reponse[$i]['etat']==='supprime'){
 							echo "<td><a href='".$pageRest."#body2'>Restaurer</a></td>";
 						}
+						echo "<td><a href='".$pageChange."#body2'>Changer de Classe</a></td>";
 					echo "</tr>";
 				}
 			}

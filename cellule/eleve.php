@@ -62,29 +62,29 @@
 						xhr.send("clas="+clas);
 					}
 			
-			function goFind(){
-				var xhr = getXhr()
-				// On définit ce qu'on va faire quand on aura la reponse 
-				xhr.onreadystatechange = function(){
-					// On ne fait klk choz que si on a tt rxu et ke le serveur est ok
-					if(xhr.readyState==4 && xhr.status==200){
-						leinput = xhr.responseText;
-						// On se sert de l'innerHTML pour rajouter les options à la liste
-						document.getElementById('resultat').innerHTML = leinput;
-						// document.getElementById('resultat') = leselect;
+					function goFind(){
+						var xhr = getXhr()
+						// On définit ce qu'on va faire quand on aura la reponse 
+						xhr.onreadystatechange = function(){
+							// On ne fait klk choz que si on a tt rxu et ke le serveur est ok
+							if(xhr.readyState==4 && xhr.status==200){
+								leinput = xhr.responseText;
+								// On se sert de l'innerHTML pour rajouter les options à la liste
+								document.getElementById('resultat').innerHTML = leinput;
+								// document.getElementById('resultat') = leselect;
+							}
+						}
+						// Ici on va voir comment faire du POST
+						xhr.open("POST", "eleve/find.ajax.php", true);
+						// Ne pas oublier xa pour le POST 
+						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+						// Ne pas oublier de poster les arguments 
+						// C'est-à-dire l'id de la Classe par exemple
+						sel = document.getElementById('eleve');
+						// eleve = sel.options[sel.selectedIndex].value;
+						eleve = sel.value;
+						xhr.send("eleve="+eleve);
 					}
-				}
-				// Ici on va voir comment faire du POST
-				xhr.open("POST", "eleve/find.ajax.php", true);
-				// Ne pas oublier xa pour le POST 
-				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-				// Ne pas oublier de poster les arguments 
-				// C'est-à-dire l'id de la Classe par exemple
-				sel = document.getElementById('eleve');
-				// eleve = sel.options[sel.selectedIndex].value;
-				eleve = sel.value;
-				xhr.send("eleve="+eleve);
-			}
 			
 			
 				</script>

@@ -2,21 +2,26 @@
     session_start();
 	require_once('../../inc/connect.inc.php');
 	$config = new config($db);
-	// echo '<pre>'; print_r($_SESSION);
 	if(isset($_POST['subject'])){
         $matiere = $_POST['subject'];
         if($matiere=='null'){
             echo "<h3 class='alert'>Vous devez choisir une matière.</h3>";
-        }else{ 
+        }else{
+			// Uniquement pour les entêtes 
 			$listeSousMatiere = $config->listeSousMatiereClasse($_SESSION['user']['classeTenue']['id'],
                                                                     $matiere);
-			
+			// Celui qui porte toutes les notes 
+			$listeNote = $config->viewNoteMatiere($_SESSION['user']['classeTenue']['id'], 
+													$_SESSION['mois'],
+													 $matiere);
 			$cle = 'libelle_competence_'.$_SESSION['user']['classeTenue']['section'];
 			$nomMatiere = $listeSousMatiere[0][$cle];
+			// echo '<pre>'; print_r($listeNote); echo '</pre>';
 		?>
 			<h3 class='bien'>Matière : <?php echo strtoupper($nomMatiere); ?></h3>
 			<table border='1' width='100%'>
 				<tr>
+					<th>N°</th>
 					<th>Nom de l'élève</th>
 					<?php 
 						for($i=0;$i<count($listeSousMatiere);$i++){
@@ -31,36 +36,24 @@
 						}
 						$totalPoint = array_sum($point);
 					?>
-					<th>Total / <?php echo $totalPoint; ?></th>   
-					<th>Côte </th>   
+					<th>Total / <?php echo $totalPoint; ?></th>
 				</tr>
 				<?php 
-				$listeEleve = $config->listeEleve($_SESSION['user']['classeTenue']['id'],
-                                                        'non_supprime',
-                                                        $_SESSION['information']['id']);
-				for($a=0;$a<count($listeEleve);$a++){
-					$nomEleve = $listeEleve[$a]['nom_complet'];
-					$idEleve = $listeEleve[$a]['id'];
-					echo "<tr>";
-						echo "<td>";
-							echo $nomEleve;
-						echo "</td>";
-						for($b=0;$b<count($listeSousMatiere);$b++){
-							$mat = $listeSousMatiere[$b]['id'];
-							$noteEleve = $config->noteEleveSousMatiere($idEleve,$mat,$_SESSION['mois']);
-							$totalNote[$a][] = $noteEleve['note'];
-							echo "<td align='center'>";
-								echo $noteEleve['note'];
-							echo "</td>";
-						}
-						$totalNoteEleve = array_sum($totalNote[$a]);
-						$appr = $config->getAppreciation($totalNoteEleve,$totalPoint);
-						echo "<td>";
-							echo $totalNoteEleve;
-						echo "</td>";
-						echo "<td align='center'>".$appr."</td>";
-					echo "</tr>";
+				$num = 1;
+				for($x=0;$x<count($listeNote);$x++){ ?>
+					<tr>
+						<td><?php echo $num; ?></td>
+						<td><?php echo stripslashes($listeNote[$x]['nom_complet']); ?></td>
+						<td><?php echo $listeNote[$x]['oral']; ?></td>
+						<td><?php echo $listeNote[$x]['ecrit']; ?></td>
+						<td><?php echo $listeNote[$x]['prat']; ?></td>
+						<td><?php echo $listeNote[$x]['se']; ?></td>
+						<td><?php echo $listeNote[$x]['total']; ?></td>
+					</tr>
+				<?php 
+					$num++;
 				}
+				
 			echo "</table>";
          }
     }

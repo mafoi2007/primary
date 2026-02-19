@@ -15,7 +15,7 @@
 			$nomMatiere = $listeSousMatiere[0][$cle];
 		?>
 			<h3 class='bien'>Matière : <?php echo strtoupper($nomMatiere); ?></h3>
-			<table border='1' width='80%'>
+			<table border='1' width='100%'>
 				<tr>
 					<th>N°</th>
 					<th>Nom de l'élève</th>
@@ -35,48 +35,67 @@
 					<th>Total / <?php echo $totalPoint; ?></th>   
 				</tr>
 				<?php 
-				$listeEleve = $config->listeEleve($_SESSION['user']['classeTenue']['id'],
-                                                        'non_supprime',
-                                                        $_SESSION['information']['id']);
-				$x = 1;
-				for($a=0;$a<count($listeEleve);$a++){
-					$nomEleve = $listeEleve[$a]['nom_complet'];
-					$idEleve = $listeEleve[$a]['id'];
-					echo "<tr>";
-						echo "<td>".$x."</td>";
-						echo "<td>";
-							echo "<input"; 
-								echo " type='hidden'"; 
-								echo " name='eleve[]'"; 
-								echo " value='".$idEleve."'/>";
-								echo $nomEleve;
-						echo "</td>";
-						for($b=0;$b<count($listeSousMatiere);$b++){
-							$mat = $listeSousMatiere[$b]['id'];
-							$noteEleve = $config->noteEleveSousMatiere($idEleve,$mat,$_SESSION['mois']);
-							$totalNote[$a][] = $noteEleve['note'];
-							echo "<td align='center'>";
-								echo "<input ";
-									echo "type='number' size='5' ";
-									echo "step = '0.01'";
-										echo " max='".$listeSousMatiere[$b]['nb_point']."'";
-									echo "name='note[".$a."][]' ";
-									echo "value='".$noteEleve['note']."' />";
-							echo "</td>";
-						}
-						$totalNoteEleve = array_sum($totalNote[$a]);
-						echo "<td>";
-							echo "<input 
-									type='text'
-									size='6'
-									value='".$totalNoteEleve."' 
-									disabled />";
-						echo "</td>";
-					echo "</tr>";
-					$x++;
+				$listeNote = $config->viewNoteMatiere($_SESSION['user']['classeTenue']['id'], 
+													$_SESSION['mois'],
+													 $matiere);
+				$num = 1;
+				for($x=0;$x<count($listeNote);$x++){ ?>
+					<tr>
+						<td><?php echo $num; ?></td>
+						<td>
+							<input 
+								type='hidden' 
+								name='eleve[]' 
+								value='<?php echo $listeNote[$x]['idNote']; ?>' />
+							<?php echo stripslashes($listeNote[$x]['nom_complet']); ?></td>
+						<td>
+							<input 
+								type = 'number'
+								name='oral[]'
+								max = '<?php echo $listeSousMatiere[0]['nb_point']; ?>'
+								min = '0.1'
+								step='0.01'
+								value = '<?php echo $listeNote[$x]['oral']; ?>'
+								/>
+						</td>
+						<td>
+							<input 
+								type = 'number'
+								name='ecrit[]'
+								max = '<?php echo $listeSousMatiere[1]['nb_point']; ?>'
+								min = '0.1'
+								step='0.01'
+								value = '<?php echo $listeNote[$x]['ecrit']; ?>'
+								/>
+						</td>
+						<td>
+							<input 
+								type = 'number'
+								name='prat[]'
+								max = '<?php echo $listeSousMatiere[2]['nb_point']; ?>'
+								min = '0.1'
+								step='0.01'
+								value = '<?php echo $listeNote[$x]['prat']; ?>'
+								/>
+						</td>
+						<td>
+							<input 
+								type = 'number'
+								name='se[]'
+								max = '<?php echo $listeSousMatiere[3]['nb_point']; ?>'
+								min = '0.1'
+								step='0.01'
+								value = '<?php echo $listeNote[$x]['se']; ?>'
+								/>
+						</td>
+						<td><?php echo $listeNote[$x]['total']; ?></td>
+					</tr>
+				<?php 
+					$num++;
 				}
+				
 				echo "<tr>";
-					echo "<td colspan='6' align='center'>";
+					echo "<td colspan='10' align='center'>";
 						echo "<input 
 								type='submit' 
 								name='updateNote' 

@@ -24,6 +24,7 @@
                 <h3 class='bien'>Matière : <?php echo strtoupper($nomMatiere); ?></h3>
                 <table border = 1 width='100%'>
                     <tr>
+                        <th>N°</th>
                         <th>Nom de l'élève</th>
                         <?php 
                          for($i=0;$i<count($listeSousMatiere);$i++){
@@ -44,12 +45,14 @@
                     $listeEleve = $config->listeEleve($_SESSION['user']['classeTenue']['id'],
                                                         'non_supprime',
                                                         $_SESSION['information']['id']);
+                    $num = 1;
                      for($a=0;$a<count($listeEleve);$a++){
-                        $nomEleve = $listeEleve[$a]['nom_complet'];
+                        $nomEleve = stripslashes($listeEleve[$a]['nom_complet']);
                         $idEleve = $listeEleve[$a]['id'];
                         $listeSousMat = $config->listeSousMatiereClasse($_SESSION['user']['classeTenue']['id'], 
                                                                         $matiere); ?>
                         <tr>
+                            <td><?php echo $num; ?></td>
                              <td>
                                 <?php echo $nomEleve; ?><input type='hidden' name='eleve[]' value="<?php echo $idEleve; ?>" />
                             </td> <?php 
@@ -75,9 +78,10 @@
 							<td>&nbsp;</td>
                         </tr>
 <?php 
-                     }  ?>
+                        $num++;
+                    }  ?>
                         <tr>
-                            <td colspan = '6' align = 'center'>
+                            <td colspan = '10' align = 'center'>
                                 <input 
                                     type='submit' 
                                     name='saveNote' 

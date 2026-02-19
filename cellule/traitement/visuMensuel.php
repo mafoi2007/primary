@@ -1,7 +1,7 @@
 <div id = 'body2'>
 	<h1 class='alert'>Vérification des Notes</h1>
 	<form method='post' action=''>
-		<p>Classe :
+		Classe :
 				<select name="classe" id='classe' onChange='listMois()'>
 					<?php
 					$listeFr = $config->viewClasseSection('actif', 'fr');
@@ -26,8 +26,8 @@
 					
 					?>
 					<option value='null' selected>-Choisir une Classe-</option>
-				</select></p>
-			<div id='mois'>
+				</select>
+			<div id='mois' style='display:inline'>
 				
 			</div>
 			

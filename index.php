@@ -3,6 +3,8 @@
 	require_once('inc/connect.inc.php');
 	$verifConn = include_once('inc/firstConnexion.php');
 	$config = new config($db);
+
+	$config->update();
 	
 	if(isset($_SESSION['message'])){
 		echo "<script>alert('".$_SESSION['message']."');</script>";

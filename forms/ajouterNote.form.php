@@ -1,5 +1,5 @@
 <h1 class='alert'>Insérer des Notes</h1>
-<form method='post' action='../traitement.php' target='_blank'>
+<form method='post' action='../traitement.php'>
 	<p>Mois : 
 		<select name='mois' id='mois' onChange='showMatiere()'>
 			<?php 
