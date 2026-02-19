@@ -37,53 +37,6 @@
 				<td colspan='5'>&nbsp;</td>
 			</tr>
 			<tr>
-				<td>Classe</td>
-				<td>
-					<select>
-						<option disabled selected>
-							<?php echo $eleve['libelle_classe'];?>
-						</option>
-					</select>
-				</td>
-				<td>
-					<select name='classeEleve'>
-						<?php $classeFr = $config->viewClasseSection('actif', 'fr'); ?>
-						<optgroup label='Section Francophone'>
-							<?php 
-							for($i=0;$i<count($classeFr);$i++){
-								echo "<option value='";
-								echo $classeFr[$i]['id'];
-								echo "'";
-								if($eleve['classe']==$classeFr[$i]['id']){
-									echo "selected";
-								}
-								echo ">";
-								echo $classeFr[$i]['libelle_classe'];
-								echo "</option>";
-							} ?>
-						</optgroup>
-						<?php $classeEn = $config->viewClasseSection('actif', 'en'); ?>
-						<optgroup label='Section Anglophone'>
-							<?php 
-							for($j=0;$j<count($classeEn);$j++){
-								echo "<option value='";
-								echo $classeEn[$j]['id'];
-								echo "'";
-								if($eleve['classe']==$classeEn[$j]['id']){
-									echo "selected";
-								}
-								echo ">";
-								echo $classeEn[$j]['libelle_classe'];
-								echo "</option>";
-							} ?>
-						</optgroup>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<td colspan='5'>&nbsp;</td>
-			</tr>
-			<tr>
 				<td>Matricule</td>
 				<td><input 
 						type='text'
