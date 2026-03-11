@@ -397,9 +397,9 @@
 			// La section Francophone
 			elseif($classe['section']=='fr'){
 				// Un bulletin par élève
-				$eleve = $classe['eleve'];
+				/*$eleve = $classe['eleve'];
 				$infoClasse = $classe['infoClasse'];
-				$mois = $classe['moisCourant'];
+				$mois = $classe['moisCourant'];*/
 				/*for($i=0;$i<count($eleve);$i++){
 					$pdf->addPage();
 					$pdf->Entete();

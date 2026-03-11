@@ -2214,10 +2214,12 @@
 			for($i=0;$i<count($listeEleve);$i++){
 				$idEleve = $listeEleve[$i]['id'];
 				$sql = "SELECT * 
-						FROM note 
+						FROM note, liste_competence 
 						WHERE classe = '$classe'
 							AND periode = '$mois' 
-							ANd eleve = '$idEleve' ";
+							AND eleve = '$idEleve'
+							AND liste_competence.id = note.competence 
+							ORDER BY code_competence";
 				$req = $this->_db->query($sql);
 				$res[$i] = $req->fetchAll(PDO::FETCH_ASSOC);
 			}
