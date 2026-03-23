@@ -221,11 +221,26 @@
 					$this->Cell(10, 5, $ponderationMatiere[$idEleve][$idMatiere], 1, 0, 'C');
 					$idEleve = $eleve[$i]['id'];
 					$note = $classe['note'][$idEleve];
-					for($c=1;$c<=$classe['nbMois'];$c++){
-						$champ[$c] = $codeMatiere.'_'.$c;
-						$cle = $champ[$c];
-						$this->Cell(15,5,$note[$cle],1,0,'C');
+
+					// Nombre de Mois en fonction des Trimestres 
+					if($trimestre==1){
+						for($c=1;$c<=$classe['nbMois'];$c++){
+							$val = array(1,2,3);
+							$champ[$c] = $codeMatiere.'_'.$val[$c-1];
+							$cle = $champ[$c];
+							$this->Cell(15,5,$note[$cle],1,0,'C');
+						}
+					}elseif($trimestre==2){
+						for($c=1;$c<=$classe['nbMois'];$c++){
+							$val = array(4,5,6);
+							$champ[$c] = $codeMatiere.'_'.$val[$c-1];
+							$cle = $champ[$c];
+							$this->Cell(15,5,$note[$cle],1,0,'C');
+						}
 					}
+					
+					
+
 					$this->SetFont('Times','B',8);
 					$cleCote = $codeMatiere.'_cote';
 					$cleAppr = $codeMatiere.'_appr';
@@ -240,12 +255,26 @@
 				$totalAppr = $classe['note'][$idEleve]['appr'];;
 				$this->Cell(75, 5, 'TOTAL ', 1, 0, 'C', true);
 				$this->Cell(10, 5, $classe['ponderation'], 1, 0, 'C', true);
-				for($d=1;$d<=$classe['nbMois'];$d++){
-					$cle = 'moyenne_'.$d;
-					$champ[$d] = $classe['note'][$idEleve][$cle];
-					// $cle = $champ[$c];
-					$this->Cell(15,5,$champ[$d],1,0,'C');
+				// Moyenne en fonction des trimestres 
+				if($trimestre==1){
+					for($d=1;$d<=$classe['nbMois'];$d++){
+						$val = array(1,2,3);
+						$cle = 'moyenne_'.$val[$d-1];
+						$champ[$d] = $classe['note'][$idEleve][$cle];
+						$this->Cell(15,5,$champ[$d],1,0,'C');
+					}
+				}elseif($trimestre==2){
+					for($d=1;$d<=$classe['nbMois'];$d++){
+						$val = array(4,5,6);
+						$cle = 'moyenne_'.$val[$d-1];
+						$champ[$d] = $classe['note'][$idEleve][$cle];
+						$this->Cell(15,5,$champ[$d],1,0,'C');
+					}
 				}
+
+
+
+				
 				$this->Cell(16, 5, $totalNote, 1, 0, 'C', true);
 				$this->Cell(16, 5, $totalCote, 1, 0, 'C', true);
 				$this->Cell(16, 5, $totalAppr, 1, 0, 'C', true);

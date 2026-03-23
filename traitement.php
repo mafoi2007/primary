@@ -658,7 +658,9 @@
 						if($verif==true){
 							$_SESSION['message'] = 'Certains mois pour le trimestre 2 n ont pas été traités';
 							header('Location:'.$source);
-						}else{}
+						}else{
+							$config->traiterNoteTrimestrielle($source, $classe, $trimestre);
+						}
 					}elseif($trimestre==3){
 						$verif = $config->verifTrimTrois($classe);
 						if($verif==true){

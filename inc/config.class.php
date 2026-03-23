@@ -2728,7 +2728,12 @@
 						WHERE eleve='$eleve'";
 				$req = $this->_db->query($sql);
 				$res = $req->fetch(PDO::FETCH_ASSOC);
-				$resultat[] = $res['moyenne'];
+				if(!empty($res)){
+					$resultat[] = $res['moyenne'];
+				}else{
+					$resultat[] = NULL;
+				}
+				//$resultat[] = $res['moyenne'];
 			}
 			return $resultat;
 		}
@@ -2759,6 +2764,7 @@
 				// On prend les notes trimestrielles d'un élève ainsi que ses moyennes mensuelles
 				$notes = $this->getNoteTrimestreEleve($idEleve, $trimestre);
 				$moyenne = $this->getMoyenneTrimestreEleve($idEleve, $trimestre);
+				// echo '<pre>'; print_r($moyenne); echo '</pre>';
 				// On scinde les notes en notes mensuelles 
 				for($x=0;$x<count($notes);$x++){
 					$mois = $notes[$x];
@@ -2773,16 +2779,25 @@
 					$idMatiere = $listeMatiere[$a]['id_competence'];
 					$codeMatiere = $listeMatiere[$a]['code_competence'];
 					$noteTrim = $note[$idEleve][$idMatiere];
+					$count = 0;
 					for($b=0;$b<count($noteTrim);$b++){
 						if(empty($noteTrim[$b])){
-							unset($noteTrim[$b]);
+							$count++;
 						}
 					}
+					$division = count($noteTrim) - $count;
 					$sommeTrimestrielle = array_sum($noteTrim);
-					$noteTrimestrielle = $sommeTrimestrielle / count($noteTrim);
 					$ponderationMatiere = $this->getPonderationMatiere($idMatiere, $classe);
-					$cote = $this->getAppreciation($noteTrimestrielle, $ponderationMatiere);
-					$appr = $this->getLibelleAppreciation($cote, $section);
+					if($division>0){
+						$noteTrimestrielle = $sommeTrimestrielle / $division;
+						$cote = $this->getAppreciation($noteTrimestrielle, $ponderationMatiere);
+						$appr = $this->getLibelleAppreciation($cote, $section);
+					}else{
+						$noteTrimestrielle = NULL;
+						$cote = NULL;
+						$appr = NULL;
+					}
+										
 					if($trimestre==1){
 						$champ1 = $codeMatiere."_1";
 						$champ2 = $codeMatiere."_2";
@@ -2865,7 +2880,7 @@
 								"cote"=>$cote,
 								"appr"=>$appr,
 								"eleve"=>$idEleve
-						));
+						));	
 					}elseif($trimestre==3){}
 				}
 			}
@@ -2964,6 +2979,7 @@
 			$as = $this->getCurrentYear();
 			$listeEleve = $this->listeEleve($classe, 'non_supprime', $as);
 			for($i=0;$i<count($listeEleve);$i++){
+				// echo '<h1>'. $i.'</h1>';
 				$idEleve = $listeEleve[$i]['id'];
 				$listeMatiere = $this->listeMatiereClasse($classe);
 				for($j=0;$j<count($listeMatiere);$j++){
@@ -2971,23 +2987,22 @@
 					$codeMatiere = $listeMatiere[$j]['code_competence'];
 					$libChamp = strtolower($codeMatiere);
 					$sql = "SELECT $libChamp 
-							FROM $nomTable 
+							FROM $nomTable
 							WHERE eleve = '$idEleve'";
 					$req = $this->_db->query($sql);
 					$res = $req->fetch(PDO::FETCH_ASSOC);
-					
-					if($res[$libChamp]!=NULL){
+					$nbPoint = $this->setNote($res[$libChamp]);
+					if($nbPoint!=NULL){
 						$pointEvaluation[$i][$j] = $this->getPonderationMatiere($idMatiere,$classe);
+					}else{
+						$pointEvaluation[$i][$j] = 0;
 					}
-					// echo count($occurence);
-					// echo '<pre>'; print_r($occurence); echo '</pre>';
-					// echo $codeMatiere.'<br />';
 				}
 				$update = $this->_db->prepare("UPDATE $nomTable SET
 												ponderation = :pondEleve
 												WHERE eleve = '$idEleve'");
-				$update->execute(array('pondEleve'=>array_sum($pointEvaluation[$i])));
-				// echo "<p>La valeur des points est ".array_sum($pointEvaluation[$i])." pour ".$listeEleve[$i]['nom_complet']."</p>";
+				$update->execute(array('pondEleve'=>$this->setNote(array_sum($pointEvaluation[$i]))));
+				// echo "<p>La valeur des points est ".$this->setNote(array_sum($pointEvaluation[$i]))." pour ".$listeEleve[$i]['nom_complet']."</p>";
 			}
 		}
 		
@@ -3354,7 +3369,7 @@
 
 
 
-		// On traite les notes mensuelles 
+		// On traite les notes trimestrielles 
 		public function traiterNoteTrimestrielle($source, $classe, $trimestre){
 			$this->_classe = $this->setUserId($classe);
 			$this->_trimestre = $this->setUserId($trimestre);
@@ -3376,6 +3391,7 @@
 			// On informe que tout s'est bien passé 
 			$_SESSION['message'] = 'Notes de '.$infoClasse['libelle_classe'].' traitées ';
 			$_SESSION['message'].= ' pour le trimestre '.$this->_trimestre.'. Imprimez le bulletin.';
+			// header('Location: '.$source);
 			header('Location:'.$source);
 		}
 
