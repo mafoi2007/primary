@@ -45,6 +45,36 @@
 						var matiere = document.getElementById('subject_stat').value;
 						xhr.send("sequence="+sequence+"&matiere="+matiere);
 					}
+
+
+					function listMatiereStatTrimestre(){
+						var xhr = getXhr();
+						xhr.onreadystatechange = function(){
+							if(xhr.readyState==4 && xhr.status==200){
+								document.getElementById('matiere_trimestre_stat').innerHTML = xhr.responseText;
+								document.getElementById('resultat_trimestre_stat').innerHTML = '';
+							}
+						}
+						xhr.open("POST", "stat/trimestriel.ajax.php", true);
+						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+						var sel = document.getElementById('trimestre_stat');
+						var trimestre = sel.options[sel.selectedIndex].value;
+						xhr.send("trimestre="+trimestre);
+					}
+
+					function genererStatMatiereTrimestre(){
+						var xhr = getXhr();
+						xhr.onreadystatechange = function(){
+							if(xhr.readyState==4 && xhr.status==200){
+								document.getElementById('resultat_trimestre_stat').innerHTML = xhr.responseText;
+							}
+						}
+						xhr.open("POST", "stat/trimestriel.stat.ajax.php", true);
+						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+						var trimestre = document.getElementById('trimestre_stat').value;
+						var matiere = document.getElementById('subject_trimestre_stat').value;
+						xhr.send("trimestre="+trimestre+"&matiere="+matiere);
+					}
 				</script>
 				<title>Statistiques : </title>
 			</head>
