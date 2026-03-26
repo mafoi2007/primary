@@ -17,35 +17,34 @@
 				<link rel ="shortcut icon" type="image/x-icon" href="../images/homme.png" />
 				<link type="text/javascript" src="../javascript/js.js" />
 				<script>
-					function addUser(){
-						var xhr = getXhr()
-						// On définit ce qu'on va faire quand on aura la reponse 
+					function listMatiereStat(){
+						var xhr = getXhr();
 						xhr.onreadystatechange = function(){
-							// On ne fait klk choz que si on a tt rxu et ke le serveur est ok
 							if(xhr.readyState==4 && xhr.status==200){
-								leselect = xhr.responseText;
-								// On se sert de l'innerHTML pour rajouter les options à la liste
-								document.getElementById('enseignant').innerHTML = leselect;
+								document.getElementById('matiere_stat').innerHTML = xhr.responseText;
+								document.getElementById('resultat_stat').innerHTML = '';
 							}
 						}
-						// Ici on va voir comment faire du POST
-						xhr.open("POST", "../forms/ajouterUtilisateur.ajax.php", true);
-						// Ne pas oublier xa pour le POST 
+						xhr.open("POST", "stat/mensuel.ajax.php", true);
 						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-						// Ne pas oublier de poster les arguments 
-						// C'est-à-dire l'id de la Region par exemple
-						sel = document.getElementById('type');
-						type = sel.options[sel.selectedIndex].value;
-						xhr.send("type="+type);
+						var sel = document.getElementById('sequence');
+						var sequence = sel.options[sel.selectedIndex].value;
+						xhr.send("sequence="+sequence);
 					}
-					
-					
-					
-					
-					
-					
-					
-					
+
+					function genererStatMatiere(){
+						var xhr = getXhr();
+						xhr.onreadystatechange = function(){
+							if(xhr.readyState==4 && xhr.status==200){
+								document.getElementById('resultat_stat').innerHTML = xhr.responseText;
+							}
+						}
+						xhr.open("POST", "stat/mensuel.stat.ajax.php", true);
+						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+						var sequence = document.getElementById('sequence').value;
+						var matiere = document.getElementById('subject_stat').value;
+						xhr.send("sequence="+sequence+"&matiere="+matiere);
+					}
 				</script>
 				<title>Statistiques : </title>
 			</head>
@@ -74,16 +73,7 @@
 			</body>
 		</html>
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+	
 <?php 		
 	}else{
 		$_SESSION['message'] = 'Connexion illégale. Vous serez redirigé';
