@@ -491,6 +491,15 @@
 				// echo '<pre>'; print_r($_SESSION['info']);
 				header('Location:print_pdf_landscape.php');
 			}
+			// Les statistiques Trimestrielles
+			elseif($print=='statistiqueTrimestrielle'){
+				$data['trimestre'] = $_POST['trimestre'];
+				$data['section'] = $_POST['section'];
+				$information = $config->configStatTrimestrielle($data);
+				$_SESSION['print'] = $print;
+				$_SESSION['info'] = $information;
+				header('Location:print_pdf_landscape.php');
+			}
 		}
 
 

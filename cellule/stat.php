@@ -39,6 +39,22 @@
 						xhr.send("mois="+mois);
 					}
 					
+
+					function statTrimestre(){
+						var xhr = getXhr()
+						xhr.onreadystatechange = function(){
+							if(xhr.readyState==4 && xhr.status==200){
+								leselect = xhr.responseText;
+								document.getElementById('sectionTrimestre').innerHTML = leselect;
+							}
+						}
+						xhr.open("POST", "stat/trimestre.ajax.php", true);
+						xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+						sel = document.getElementById('trimestre');
+						trimestre = sel.options[sel.selectedIndex].value;
+						xhr.send("trimestre="+trimestre);
+					}
+
 					/*
 					function listEleve(){
 						var xhr = getXhr()

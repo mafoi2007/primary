@@ -259,6 +259,19 @@
 		}
 		
 		
+		/**
+		 * On récupère les trimestres dont les notes ont été traitées
+		 */
+		public function getTrimestresTraites(){
+			$sql = "SELECT DISTINCT trimestre
+					FROM bull_trimestriel
+					ORDER BY trimestre DESC";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			return $res;
+		}
+
+
 		public function getAppreciation($note, $total){
 			if(empty($note)){
 				$this->_appreciation = NULL;
@@ -2405,6 +2418,19 @@
 		}
 
 
+		private function classeTraiteesTrimestre($trimestre, $section){
+			$sql = "SELECT classe, libelle_classe, section, enseignant, enseignant.nom as nom_enseignant
+					FROM bull_trimestriel, classe, enseignant
+					WHERE trimestre = '$trimestre'
+						AND classe.id = classe
+						AND classe.section = '$section'
+						AND enseignant.id = classe.enseignant
+					ORDER BY section, niveau_classe, libelle_classe";
+			$req = $this->_db->query($sql);
+			$res = $req->fetchAll(PDO::FETCH_ASSOC);
+			return $res;
+		}
+
 
 		public function configStatMensuelle($mois){
 			$this->_mois = $this->setUserId($mois['mois']);
@@ -2447,7 +2473,36 @@
 		
 		
 		
-		
+		public function configStatTrimestrielle($trimestre){
+			$this->_trimestre = $this->setUserId($trimestre['trimestre']);
+			$this->_section = $this->setSection($trimestre['section']);
+			$classes = $this->classeTraiteesTrimestre($this->_trimestre, $this->_section);
+
+			for($i=0;$i<count($classes);$i++){
+				$idClasse = $classes[$i]['classe'];
+				$effectifClasse[$idClasse] = $this->listeEleveStat($idClasse, 'actif', '');
+				$table = 'trimestre_'.$this->_trimestre.'_'.$idClasse;
+				$exist = $this->checkTable($table);
+				if($exist==NULL){
+					$_SESSION['message'] = 'Certaines classes ne sont pas traitées.';
+					header('Location:'.$_SERVER['HTTP_REFERER']);
+					exit;
+				}else{
+					$nbEvalue = $this->nbEvalues($table);
+					$resultat[$idClasse] = $nbEvalue;
+					$nbMoyenne = $this->nbMoyennes($table);
+					$resMoyenne[$idClasse] = $nbMoyenne;
+				}
+			}
+			$information['trimestre'] = $this->_trimestre;
+			$information['section'] = $this->_section;
+			$information['classe'] = $classes;
+			$information['effectif'] = $effectifClasse;
+			$information['evalues'] = $resultat;
+			$information['moyennes'] = $resMoyenne;
+			return $information;
+		}
+
 		// On traite les notes mensuelles 
 		public function traiterNoteMensuelle($source, $classe, $mois){
 			$this->_classe = $this->setUserId($classe);
